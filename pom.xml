@@ -6,4 +6,16 @@
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>nets-payment-api</name>
+    <dependencies>
+        <dependency>
+            <groupId>net.sf.j8583</groupId>
+            <artifactId>j8583</artifactId>
+            <version>1.5.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.joda</groupId>
+            <artifactId>joda-money</artifactId>
+            <version>0.6</version>
+        </dependency>
+    </dependencies>
 </project>
