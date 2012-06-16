@@ -8,18 +8,15 @@ import org.joda.money.Money;
  */
 public interface IPaymentSystem {
 
-    public enum EstimationFlag {
-
-        Estimated, Accurate, AccurateSupplementary
-    }
-
-    public enum ReasonFlag {
-
-        Normal, FraudSuspicion
-    }
-
-    public void authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, EstimationFlag amountFlag, 
-                        ReasonFlag reasonFlag, String terminalId);
+    public void authorize(Merchant merchant, Card card, Money money, String orderId, 
+                        boolean recurring, boolean fraudSuspect, String terminalId);
     
+    public void renewAuthorization();
+ 
+    public void refund();
+    
+    public void capture();
+    
+    public void cancel();
     
 }
