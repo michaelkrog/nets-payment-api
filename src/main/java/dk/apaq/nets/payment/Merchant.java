@@ -10,6 +10,17 @@ public class Merchant {
     private String merchantId;
     private Address address;
 
+    public Merchant() {
+    }
+
+    public Merchant(String merchantId, String name, Address address) {
+        this.name = name;
+        this.merchantId = merchantId;
+        this.address = address;
+    }
+    
+    
+
     public Address getAddress() {
         return address;
     }

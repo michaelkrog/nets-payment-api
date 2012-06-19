@@ -1,6 +1,8 @@
 package dk.apaq.nets.payment;
 
 import com.solab.iso8583.IsoMessage;
+import com.solab.iso8583.IsoType;
+import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -18,7 +20,7 @@ import org.joda.money.Money;
  */
 public class Nets implements IPaymentSystem {
 
-    private static final int MESSAGE_TYPE_AUTHORIZE_REQUEST = 1100;
+    private static final int MESSAGE_TYPE_AUTHORIZE_REQUEST = 4352; //1100 hex
     
     private final URL netsServiceUrl;
     private final HttpClient httpClient;
@@ -34,11 +36,11 @@ public class Nets implements IPaymentSystem {
     
     public void authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean fraudSuspect, String terminalId) throws IOException {
         IsoMessage message = messageFactory.newMessage(MESSAGE_TYPE_AUTHORIZE_REQUEST);
-        
-    
+        message.setIsoHeader("PSIP100000");
+        message.setField(1, new IsoValue<String>(IsoType.BINARY, "701405C200E28000", 8));
         HttpHost host = new HttpHost(netsServiceUrl.getHost(), netsServiceUrl.getPort(), netsServiceUrl.getProtocol());
         HttpPost postMethod = new HttpPost(netsServiceUrl.getPath());
-        ByteArrayEntity entity = new ByteArrayEntity(message.writeToBuffer(200).array());
+        ByteArrayEntity entity = new ByteArrayEntity(message.writeToBuffer(2).array());
         postMethod.setEntity(entity);
         HttpResponse response = httpClient.execute(host, postMethod);
     }
