@@ -18,6 +18,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -121,7 +122,7 @@ public class NetsTest {
         Nets nets = new Nets(serverUrl, client, messageFactory);
         
         System.out.println("authorize");
-        Merchant merchant = new Merchant("123", "Boink", new Address("street", "postal", "city", "DNK"));
+        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card("cardno", 12, 11, 123);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
@@ -132,6 +133,7 @@ public class NetsTest {
         
         byte[] msg = netsHandler.getLastMessageReceived();
         char[] hex = Hex.encodeHex(msg);
+        String hexString = Arrays.toString(hex);
         String str = new String(msg);
     }
 
