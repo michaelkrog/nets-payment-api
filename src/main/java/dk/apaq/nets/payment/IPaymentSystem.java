@@ -1,5 +1,6 @@
 package dk.apaq.nets.payment;
 
+import java.io.IOException;
 import org.joda.money.Money;
 
 /**
@@ -9,7 +10,7 @@ import org.joda.money.Money;
 public interface IPaymentSystem {
 
     public void authorize(Merchant merchant, Card card, Money money, String orderId, 
-                        boolean recurring, boolean fraudSuspect, String terminalId);
+                        boolean recurring, boolean fraudSuspect, String terminalId) throws IOException;
     
     public void renewAuthorization();
  
