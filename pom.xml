@@ -26,5 +26,6 @@
   <modules>
     <module>nets-payment-api</module>
     <module>nets-payment-test</module>
+    <module>nets-payment-core</module>
   </modules>
 </project>
