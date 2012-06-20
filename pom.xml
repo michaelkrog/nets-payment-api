@@ -1,11 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>dk.apaq</groupId>
-  <artifactId>nets-payment-api</artifactId>
+  <artifactId>nets-payment</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  <name>nets-payment-api</name>
+  <packaging>pom</packaging>
+  <name>nets-payment</name>
     <repositories>
         <repository>
             <url>http://repo1.maven.org/maven2/</url>
@@ -16,48 +16,14 @@
     </repositories>
     <dependencies>
         <dependency>
-            <groupId>net.sf.j8583</groupId>
-            <artifactId>j8583</artifactId>
-            <version>1.5.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.joda</groupId>
-            <artifactId>joda-money</artifactId>
-            <version>0.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.0.2</version>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.10</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.nucleus8583</groupId>
-            <artifactId>nucleus8583-core</artifactId>
-            <version>2.3.3</version>
-        </dependency>
+        
     </dependencies>
+  <modules>
+    <module>nets-payment-api</module>
+  </modules>
 </project>
