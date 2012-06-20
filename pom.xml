@@ -25,5 +25,6 @@
     </dependencies>
   <modules>
     <module>nets-payment-api</module>
+    <module>nets-payment-test</module>
   </modules>
 </project>
