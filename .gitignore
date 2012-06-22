@@ -6,3 +6,4 @@
 *.ear
 /target/
 /nets-payment-api/target/
+/nets-payment-core/target/

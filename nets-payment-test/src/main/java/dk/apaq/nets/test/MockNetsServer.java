@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.MessageTypes;
+import dk.apaq.nets.payment.PGTMHeader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,6 +32,27 @@ import org.apache.commons.io.IOUtils;
  */
 public class MockNetsServer implements HttpHandler {
     
+    private static final int FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER = 2;
+    private static final int FIELD_INDEX_PROCESSING_CODE = 3;
+    private static final int FIELD_INDEX_AMOUNT = 4;
+    private static final int FIELD_INDEX_LOCAL_TIME = 12;
+    private static final int FIELD_INDEX_EXPIRATION = 14;
+    private static final int FIELD_INDEX_POINT_OF_SERVICE = 22;
+    private static final int FIELD_INDEX_FUNCTION_CODE = 24;
+    private static final int FIELD_INDEX_MESSAGE_REASON_CODE = 25;
+    private static final int FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE = 26;
+    private static final int FIELD_INDEX_ACQUIRER_REFERENCE = 31;
+    private static final int FIELD_INDEX_APPROVAL_CODE= 38;
+    private static final int FIELD_INDEX_ACTION_CODE= 39;
+    private static final int FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID= 41;
+    private static final int FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE= 42;
+    private static final int FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION= 43;
+    private static final int FIELD_INDEX_ADDITIONAL_RESOPNSE_DATA= 44;
+    private static final int FIELD_INDEX_ADDITIONAL_DATA_NATIONAL= 47;
+    private static final int FIELD_INDEX_CURRENCY_CODE= 49;
+    private static final int FIELD_INDEX_AUTH_ODE= 56;
+    private static final int FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE= 57;
+    
     private List<CardEntry> cards = new ArrayList<CardEntry>();
     private HttpServer httpServer = null;
     private MessageFactory messageFactory = new MessageFactory();
@@ -53,26 +75,14 @@ public class MockNetsServer implements HttpHandler {
         }
     }
     
-    private class PGTMHeader {
-        int length;
-        String identity;
-        String networkResponseCode;
-
-        public PGTMHeader(int length, String identity, String networkResponseCode) {
-            this.length = length;
-            this.identity = identity;
-            this.networkResponseCode = networkResponseCode;
-        }
-        
-        
-    }
+    
     
     public void handle(HttpExchange he) throws IOException {
         byte[] messageBuffer = readMessageBufffer(he.getRequestBody());
         byte[] headerData = Arrays.copyOfRange(messageBuffer, 0, 32);
         byte[] messageData = Arrays.copyOfRange(messageBuffer, 32, messageBuffer.length);
         
-        PGTMHeader header = parseHeader(headerData);
+        PGTMHeader header = PGTMHeader.fromByteArray(headerData);
         
         try {
             IsoMessage message = messageFactory.parseMessage(messageData, 10);
@@ -100,20 +110,12 @@ public class MockNetsServer implements HttpHandler {
         return out.toByteArray();
     }
     
-    private PGTMHeader parseHeader(byte[] data) {
-        byte[] lengthData = Arrays.copyOfRange(data, 0, 2);
-        byte[] identityData = Arrays.copyOfRange(data, 2, 28);
-        byte[] networkData = Arrays.copyOfRange(data, 28, 30);
-        byte[] fixedData = Arrays.copyOfRange(data, 30, 32);
-        
-        int length = lengthData[0]*256 + lengthData[1];
-        String identity = new String(Hex.encodeHex(identityData));
-        String networkResponseCode = new String(Hex.encodeHex(networkData));
-        
-        return new PGTMHeader(length, identity, networkResponseCode);
-    }
+    
     
     private IsoMessage handleAuthorization(IsoMessage message) {
+        String card = message.getField(FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER).toString();
+        String expire = message.getField(FIELD_INDEX_EXPIRATION).toString(); 
+        
         return null;
     }
     
