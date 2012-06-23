@@ -34,50 +34,9 @@ import org.apache.commons.io.IOUtils;
  */
 public class MockNetsServer implements HttpHandler {
     
-    private static final int FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER = 2;
-    private static final int FIELD_INDEX_PROCESSING_CODE = 3;
-    private static final int FIELD_INDEX_AMOUNT = 4;
-    private static final int FIELD_INDEX_LOCAL_TIME = 12;
-    private static final int FIELD_INDEX_EXPIRATION = 14;
-    private static final int FIELD_INDEX_POINT_OF_SERVICE = 22;
-    private static final int FIELD_INDEX_FUNCTION_CODE = 24;
-    private static final int FIELD_INDEX_MESSAGE_REASON_CODE = 25;
-    private static final int FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE = 26;
-    private static final int FIELD_INDEX_ACQUIRER_REFERENCE = 31;
-    private static final int FIELD_INDEX_APPROVAL_CODE= 38;
-    private static final int FIELD_INDEX_ACTION_CODE= 39;
-    private static final int FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID= 41;
-    private static final int FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE= 42;
-    private static final int FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION= 43;
-    private static final int FIELD_INDEX_ADDITIONAL_RESOPNSE_DATA= 44;
-    private static final int FIELD_INDEX_ADDITIONAL_DATA_NATIONAL= 47;
-    private static final int FIELD_INDEX_CURRENCY_CODE= 49;
-    private static final int FIELD_INDEX_AUTH_ODE= 56;
-    private static final int FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE= 57;
-    
-    private List<CardEntry> cards = new ArrayList<CardEntry>();
+    private Bank bank = new Bank();
     private HttpServer httpServer = null;
     private MessageFactory messageFactory = new MessageFactory();
-    
-    private class CardEntry {
-        private final Card card;
-        private int amount;
-
-        public CardEntry(Card card, int amount) {
-            this.card = card;
-            this.amount = amount;
-        }
-
-        public Card getCard() {
-            return card;
-        }
-
-        public int getAmount() {
-            return amount;
-        }
-    }
-    
-    
     
     public void handle(HttpExchange he) throws IOException {
         byte[] messageBuffer = readMessageBufffer(he.getRequestBody());
@@ -94,20 +53,22 @@ public class MockNetsServer implements HttpHandler {
             }
             
             int type = message.getType();
+            MessageHandler messageHandler = null;
             IsoMessage response;
             switch(type) {
                 case MessageTypes.AUTHORIZATION_REQUEST:
-                    response = handleAuthorization(message);
+                    messageHandler = new AuthorizeMessageHandler();
                     break;
                 case MessageTypes.CAPTURE_REQUEST:
-                    response = handleCapture(message);
+                    messageHandler = new CaptureMessageHandler();
                     break;
                 case MessageTypes.REVERSAL_ADVICE_REQUEST:
-                    response = handleCapture(message);
+                    messageHandler = new ReversalMessageHandler();
                     break;
             }
             
-            message.write(he.getResponseBody(), 0);
+            response = messageHandler.handleMessage(bank, message);
+            response.write(he.getResponseBody(), 0);
         } catch (Exception ex) {
             throw new IOException("Unable to parse message.", ex);
         }
@@ -118,20 +79,9 @@ public class MockNetsServer implements HttpHandler {
         IOUtils.copy(in, out);
         return out.toByteArray();
     }
-    
-    private IsoMessage handleAuthorization(IsoMessage message) {
-        String card = message.getField(FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER).toString();
-        String expire = message.getField(FIELD_INDEX_EXPIRATION).toString(); 
-        
-        return null;
-    }
-    
-    private IsoMessage handleCapture(IsoMessage message) {
-        return null;
-    }
-    
-    private IsoMessage handleReversal(IsoMessage message) {
-        return null;
+
+    public Bank getBank() {
+        return bank;
     }
     
     public void start(int port) throws UnknownHostException, IOException {
@@ -150,8 +100,5 @@ public class MockNetsServer implements HttpHandler {
     public boolean isStarted() {
         return false;
     }
-    
-    public void addCard(Card card, int amount) {
-        cards.add(new CardEntry(card, amount));
-    }
+
 }
