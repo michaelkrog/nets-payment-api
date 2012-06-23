@@ -9,9 +9,11 @@ import com.sun.net.httpserver.HttpServer;
 import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.MessageTypes;
 import dk.apaq.nets.payment.PGTMHeader;
+import dk.apaq.nets.payment.PsipHeader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -86,6 +88,11 @@ public class MockNetsServer implements HttpHandler {
         
         try {
             IsoMessage message = messageFactory.parseMessage(messageData, 10);
+            PsipHeader psipHeader = PsipHeader.fromString(message.getIsoHeader());
+            if(!psipHeader.isValid() && psipHeader.getErrorCode() != PsipHeader.ErrorCode.OK) {
+                throw new IOException("Psipheader not valid");
+            }
+            
             int type = message.getType();
             IsoMessage response;
             switch(type) {
@@ -99,6 +106,8 @@ public class MockNetsServer implements HttpHandler {
                     response = handleCapture(message);
                     break;
             }
+            
+            message.write(he.getResponseBody(), 0);
         } catch (Exception ex) {
             throw new IOException("Unable to parse message.", ex);
         }
@@ -109,8 +118,6 @@ public class MockNetsServer implements HttpHandler {
         IOUtils.copy(in, out);
         return out.toByteArray();
     }
-    
-    
     
     private IsoMessage handleAuthorization(IsoMessage message) {
         String card = message.getField(FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER).toString();
