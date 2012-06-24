@@ -1,6 +1,7 @@
 package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
+import java.io.IOException;
 
 /**
  *
@@ -8,6 +9,6 @@ import com.solab.iso8583.IsoMessage;
  */
 public interface MessageHandler {
 
-    IsoMessage handleMessage(Bank bank, IsoMessage message) ;
+    IsoMessage handleMessage(Bank bank, IsoMessage message) throws IOException;
     
 }

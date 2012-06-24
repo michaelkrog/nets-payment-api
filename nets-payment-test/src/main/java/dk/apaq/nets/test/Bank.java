@@ -34,4 +34,14 @@ public class Bank {
     public void addCard(Card card, int amount) {
         cards.add(new CardEntry(card, amount));
     }
+    
+    public int getAmount(Card card) {
+        for(CardEntry entry : cards) {
+            if(entry.getCard().equals(card)) {
+                return entry.getAmount();
+            }
+        }
+        return 0;
+    }
+    
 }
