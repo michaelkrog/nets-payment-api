@@ -37,7 +37,6 @@ import org.joda.money.Money;
 public class Nets {
 
     private static final byte[] NETS_CUSTOM_HEADER = {0, -40, 0, 0, 82, 72, 0, 2, 32, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    private static final int MESSAGE_TYPE_AUTHORIZE_REQUEST = 4352; //1100 hex
     
     private final URL netsServiceUrl;
     private final HttpClient httpClient;
@@ -78,7 +77,7 @@ public class Nets {
     
     
     public NetsResponse authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean fraudSuspect, String terminalId) throws IOException {
-        IsoMessage message = messageFactory.newMessage(MESSAGE_TYPE_AUTHORIZE_REQUEST);
+        IsoMessage message = messageFactory.newMessage(MessageTypes.AUTHORIZATION_REQUEST);
         
         message.setIsoHeader("PSIP100000");
         
@@ -128,17 +127,12 @@ public class Nets {
         
         byte[] packet = message.writeToBuffer(0).array();
         
-        //Append special Nets header
-        IsoValue length = new IsoValue(IsoType.BINARY, packet.length + 32, 2);
-        IsoValue fixedHeader = new IsoValue(IsoType.BINARY, new byte[]{0, 0, 82, 72, 0, 2, 32, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, 26);
-        IsoValue networkCode = new IsoValue(IsoType.BINARY, "0000", 2);
-        IsoValue fixedField = new IsoValue(IsoType.BINARY, "0000", 2);
-        
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        length.write(buf, true);
-        fixedHeader.write(buf, true);
-        networkCode.write(buf, true);
-        fixedField.write(buf, true);
+        
+        //Append special Nets header
+        PGTMHeader pgtmh = new PGTMHeader((short)(packet.length + 32), "0000524800022000000000000032000000000000000000000000", "0000");
+        buf.write(pgtmh.toByteArray());
+        
         buf.write(packet);
         
         
