@@ -16,6 +16,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <dependencies>
+          <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>nets-payment-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
             <groupId>net.sf.j8583</groupId>
             <artifactId>j8583</artifactId>

@@ -1,8 +1,13 @@
 package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
+import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
+import com.solab.iso8583.parse.AlphaParseInfo;
+import com.solab.iso8583.parse.FieldParseInfo;
+import com.solab.iso8583.parse.LlvarParseInfo;
+import com.solab.iso8583.parse.NumericParseInfo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -20,9 +25,7 @@ import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.codec.binary.Hex;
@@ -37,6 +40,29 @@ public class MockNetsServer implements HttpHandler {
     private Bank bank = new Bank();
     private HttpServer httpServer = null;
     private MessageFactory messageFactory = new MessageFactory();
+
+    public MockNetsServer() {
+        Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
+        authReqFields.put(2, new LlvarParseInfo());
+        authReqFields.put(3, new NumericParseInfo(6));
+        authReqFields.put(4, new NumericParseInfo(12));
+        authReqFields.put(12, new NumericParseInfo(12));
+        authReqFields.put(14, new NumericParseInfo(4));
+        authReqFields.put(22, new AlphaParseInfo(12));
+        authReqFields.put(24, new NumericParseInfo(3));
+        authReqFields.put(25, new NumericParseInfo(4));
+        authReqFields.put(26, new NumericParseInfo(4));
+        authReqFields.put(31, new LlvarParseInfo());
+        authReqFields.put(41, new AlphaParseInfo(8));
+        authReqFields.put(42, new AlphaParseInfo(8));
+        authReqFields.put(43, new LlvarParseInfo());
+        authReqFields.put(47, new LlvarParseInfo());
+        authReqFields.put(49, new AlphaParseInfo(3));
+        
+        messageFactory.setParseMap(MessageTypes.AUTHORIZATION_REQUEST, authReqFields);
+    }
+    
+    
     
     public void handle(HttpExchange he) throws IOException {
         byte[] messageBuffer = readMessageBufffer(he.getRequestBody());

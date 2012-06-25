@@ -10,6 +10,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import com.sun.net.httpserver.HttpsServer;
+import dk.apaq.nets.test.MockNetsServer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -59,6 +60,7 @@ public class NetsTest {
                                 + "323636202020202020444B20444E4B30"
                                 + "3033363034444B4B";
     private HttpServer server;
+    private MockNetsServer netsServer = new MockNetsServer();
     private NetsHandler netsHandler = new NetsHandler();
     private String serverUrl;
     private MessageFactory messageFactory = new MessageFactory();
@@ -98,17 +100,19 @@ public class NetsTest {
         authReqFields.put(26, new NumericParseInfo(4));
                 
         InetAddress address = Inet4Address.getLocalHost();
-        server = HttpServer.create(new InetSocketAddress(Inet4Address.getLocalHost(), 12345), 1);
+        netsServer.start(12345);
+        /*server = HttpServer.create(new InetSocketAddress(Inet4Address.getLocalHost(), 12345), 1);
         server.createContext("/service", netsHandler);
         
-        server.start();
+        server.start();*/
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
     }
     
     @After
     public void tearDown() {
-        server.stop(1);
+        //server.stop(1);
+        netsServer.stop();
     }
 
 
