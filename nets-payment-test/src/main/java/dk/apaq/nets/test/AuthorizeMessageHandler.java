@@ -53,6 +53,8 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         int amount = bank.getAmount(card);
         
         response = new IsoMessage();
+        response.setIsoHeader("PSIP100000");
+        response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
         response.copyFieldsFrom(request, MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER,
                                         MessageFields.FIELD_INDEX_PROCESSING_CODE,
                                         MessageFields.FIELD_INDEX_AMOUNT,
@@ -60,13 +62,12 @@ public class AuthorizeMessageHandler  implements MessageHandler {
                                         MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID,
                                         MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE,
                                         MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL,
-                                        MessageFields.FIELD_INDEX_CURRENCY_CODE,
-                                        MessageFields.FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE);
+                                        MessageFields.FIELD_INDEX_CURRENCY_CODE);
         
-        response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
         response.setValue(MessageFields.FIELD_INDEX_APPROVAL_CODE, "12345", IsoType.ALPHA, 6);
         response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, "000", IsoType.NUMERIC, 3);
         response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, "12345", IsoType.LLLVAR, 255);
+        
     }
     
     private void parse() throws ParseException {
@@ -84,7 +85,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         cardAcceptorIdCode = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE).toString(); 
         cardAcceptorLocation = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION).toString(); 
         
-        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,2)).intValue(), 0);
+        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,4)).intValue(), 0);
         
     }
     

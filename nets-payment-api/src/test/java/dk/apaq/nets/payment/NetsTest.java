@@ -123,7 +123,7 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         
         DefaultHttpClient client = new DefaultHttpClient();
-        Nets nets = new Nets(serverUrl, client, messageFactory);
+        Nets nets = new Nets(serverUrl, client);
         
         System.out.println("authorize");
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
@@ -133,17 +133,14 @@ public class NetsTest {
         boolean recurring = false;
         boolean fraudSuspect = false;
         String terminalId = "test";
-        nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
         
-        byte[] msg = netsHandler.getLastMessageReceived();
-        char[] hex = Hex.encodeHex(msg);
-        String hexString = Arrays.toString(hex);
-        String str = new String(msg);
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());
+
     }
 
-    /**
-     * Test of renewAuthorization method, of class Nets.
-     */
+    /*
     @Test
     public void testRenewAuthorization() {
         System.out.println("renewAuthorization");
@@ -153,9 +150,7 @@ public class NetsTest {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of refund method, of class Nets.
-     */
+    
     @Test
     public void testRefund() {
         System.out.println("refund");
@@ -165,9 +160,6 @@ public class NetsTest {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of capture method, of class Nets.
-     */
     @Test
     public void testCapture() {
         System.out.println("capture");
@@ -177,9 +169,7 @@ public class NetsTest {
         fail("The test case is a prototype.");
     }
 
-    /**
-     * Test of cancel method, of class Nets.
-     */
+    
     @Test
     public void testCancel() {
         System.out.println("cancel");
@@ -187,5 +177,5 @@ public class NetsTest {
         instance.cancel();
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
-    }
+    }*/
 }

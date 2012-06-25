@@ -6,6 +6,8 @@ import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.AlphaParseInfo;
 import com.solab.iso8583.parse.FieldParseInfo;
+import com.solab.iso8583.parse.LllbinParseInfo;
+import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
 import com.sun.net.httpserver.HttpExchange;
@@ -15,6 +17,7 @@ import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.MessageTypes;
 import dk.apaq.nets.payment.PGTMHeader;
 import dk.apaq.nets.payment.PsipHeader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,10 +57,12 @@ public class MockNetsServer implements HttpHandler {
         authReqFields.put(26, new NumericParseInfo(4));
         authReqFields.put(31, new LlvarParseInfo());
         authReqFields.put(41, new AlphaParseInfo(8));
-        authReqFields.put(42, new AlphaParseInfo(8));
+        authReqFields.put(42, new AlphaParseInfo(15));
         authReqFields.put(43, new LlvarParseInfo());
-        authReqFields.put(47, new LlvarParseInfo());
+        authReqFields.put(47, new LllvarParseInfo());
         authReqFields.put(49, new AlphaParseInfo(3));
+        authReqFields.put(56, new LllbinParseInfo());
+        authReqFields.put(57, new NumericParseInfo(3));
         
         messageFactory.setParseMap(MessageTypes.AUTHORIZATION_REQUEST, authReqFields);
     }
@@ -94,9 +99,15 @@ public class MockNetsServer implements HttpHandler {
             }
             
             response = messageHandler.handleMessage(bank, message);
-            response.write(he.getResponseBody(), 0);
+            
+            ByteArrayOutputStream buf = new ByteArrayOutputStream();
+            response.write(buf, 0);
+            
+            he.sendResponseHeaders(200, buf.size());
+            IOUtils.copy(new ByteArrayInputStream(buf.toByteArray()), he.getResponseBody());
+            he.getResponseBody().flush();
         } catch (Exception ex) {
-            throw new IOException("Unable to parse message.", ex);
+            throw new IOException("Unable to handle message.", ex);
         }
     }
     
