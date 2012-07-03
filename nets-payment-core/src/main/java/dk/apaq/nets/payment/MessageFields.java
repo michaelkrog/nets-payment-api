@@ -20,7 +20,7 @@ public class MessageFields {
     public static final int FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID= 41;
     public static final int FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE= 42;
     public static final int FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION= 43;
-    public static final int FIELD_INDEX_ADDITIONAL_RESOPNSE_DATA= 44;
+    public static final int FIELD_INDEX_ADDITIONAL_RESPONSE_DATA= 44;
     public static final int FIELD_INDEX_ADDITIONAL_DATA_NATIONAL= 47;
     public static final int FIELD_INDEX_CURRENCY_CODE= 49;
     public static final int FIELD_INDEX_AUTH_ODE= 56;

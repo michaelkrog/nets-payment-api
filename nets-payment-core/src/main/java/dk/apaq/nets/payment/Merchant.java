@@ -9,7 +9,8 @@ public class Merchant {
     private String name;
     private String merchantId;
     private Address address;
-
+    private String businessCode;
+    
     public Merchant() {
     }
 
@@ -18,9 +19,16 @@ public class Merchant {
         this.merchantId = merchantId;
         this.address = address;
     }
-    
-    
 
+    public String getBusinessCode() {
+        return businessCode;
+    }
+
+    public void setBusinessCode(String businessCode) {
+        this.businessCode = businessCode;
+    }
+    
+    
     public Address getAddress() {
         return address;
     }

@@ -1,43 +1,25 @@
 package dk.apaq.nets.payment;
 
-import com.solab.iso8583.CustomField;
-import com.solab.iso8583.IsoMessage;
-import com.solab.iso8583.IsoType;
-import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpsServer;
 import dk.apaq.nets.test.MockNetsServer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.text.ParseException;
-import java.util.Arrays;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.localserver.LocalTestServer;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestHandler;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.junit.*;
 import static org.junit.Assert.*;
-import sun.net.httpserver.HttpServerImpl;
 
 /**
  *
@@ -59,6 +41,8 @@ public class NetsTest {
                                 + "6C657661726420345C42726F62795C33"
                                 + "323636202020202020444B20444E4B30"
                                 + "3033363034444B4B";
+    
+    
     private HttpServer server;
     private MockNetsServer netsServer = new MockNetsServer();
     private NetsHandler netsHandler = new NetsHandler();
@@ -101,17 +85,12 @@ public class NetsTest {
                 
         InetAddress address = Inet4Address.getLocalHost();
         netsServer.start(12345);
-        /*server = HttpServer.create(new InetSocketAddress(Inet4Address.getLocalHost(), 12345), 1);
-        server.createContext("/service", netsHandler);
-        
-        server.start();*/
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
     }
     
     @After
     public void tearDown() {
-        //server.stop(1);
         netsServer.stop();
     }
 
@@ -121,11 +100,11 @@ public class NetsTest {
      */
     @Test
     public void testAuthorize() throws Exception {
+        System.out.println("authorize");
         
         DefaultHttpClient client = new DefaultHttpClient();
         Nets nets = new Nets(serverUrl, client);
         
-        System.out.println("authorize");
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card("cardno", 12, 11, 123);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
@@ -140,6 +119,25 @@ public class NetsTest {
 
     }
 
+    @Test
+    public void testCancel() throws Exception {
+        System.out.println("cancel");
+        DefaultHttpClient client = new DefaultHttpClient();
+        Nets nets = new Nets(serverUrl, client);
+        /*
+        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
+        Card card = new Card("cardno", 12, 11, 123);
+        Money money = Money.of(CurrencyUnit.USD, 12.2);
+        String orderId = "orderid";
+        boolean recurring = false;
+        boolean fraudSuspect = false;
+        String terminalId = "test";
+        NetsResponse response = nets.cancel();
+        
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());*/
+    }
+    
     /*
     @Test
     public void testRenewAuthorization() {
@@ -170,12 +168,5 @@ public class NetsTest {
     }
 
     
-    @Test
-    public void testCancel() {
-        System.out.println("cancel");
-        Nets instance = null;
-        instance.cancel();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }*/
+    */
 }
