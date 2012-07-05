@@ -153,8 +153,57 @@ public class Nets {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void cancel() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public NetsResponse cancel(Merchant merchant, Card card, Money money, String orderId, String terminalId, String approvalCode, String ode, String lifeCycle) throws IOException {
+        IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.REVERSAL_ADVICE_REQUEST);
+        
+        message.setIsoHeader("PSIP100000");
+        
+        String function = FunctionCode.FullReversal.getCode();
+        String reason = MessageReason.CustomerCancellation.getCode();
+        
+        StringBuilder address = new StringBuilder();
+        address.append(merchant.getName());
+        address.append("\\");
+        address.append(merchant.getAddress().getStreet());
+        address.append("\\");
+        address.append(merchant.getAddress().getCity());
+        address.append("\\");
+        
+        address.append(merchant.getAddress().getPostalCode());
+        for(int i=address.length();i<96;i++) {
+            address.append(" ");
+        }
+        
+        address.append(merchant.getAddress().getCountryCode());
+        
+        message.setField(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
+        message.setField(MessageFields.FIELD_INDEX_PROCESSING_CODE, new IsoValue<Integer>(IsoType.NUMERIC, 000000, 6));
+        message.setField(MessageFields.FIELD_INDEX_AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, money.getAmountMinorInt(), 12));
+        message.setField(MessageFields.FIELD_INDEX_LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), 12));
+        message.setField(MessageFields.FIELD_INDEX_FUNCTION_CODE, new IsoValue<String>(IsoType.NUMERIC, function, 3));
+        message.setField(MessageFields.FIELD_INDEX_MESSAGE_REASON_CODE, new IsoValue<String>(IsoType.NUMERIC, reason, 4));
+        message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE, new IsoValue<String>(IsoType.NUMERIC, "0000", 4));
+        message.setField(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new IsoValue<String>(IsoType.LLVAR, orderId));
+        message.setField(MessageFields.FIELD_INDEX_APPROVAL_CODE, new IsoValue<String>(IsoType.ALPHA, approvalCode, 6));
+        message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new IsoValue<String>(IsoType.ALPHA, terminalId, 8));
+        message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new IsoValue<String>(IsoType.ALPHA, merchant.getMerchantId(), 15));
+        message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new IsoValue<String>(IsoType.LLVAR, address.toString(), 99));
+        message.setField(MessageFields.FIELD_INDEX_CURRENCY_CODE, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
+        message.setField(MessageFields.FIELD_INDEX_AUTH_ODE, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
+        message.setField(MessageFields.FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE, new IsoValue<String>(IsoType.BINARY, lifeCycle, 3));
+        
+        Channel channel = channelFactory.createChannel();
+        message = channel.sendMessage(message);
+        
+        if(message == null) {
+            throw new IOException("Message could not be parsed. Unknown message type?");
+        }
+        
+        String actionCode = message.getField(MessageFields.FIELD_INDEX_ACTION_CODE).toString();
+        ode = message.getField(MessageFields.FIELD_INDEX_AUTH_ODE).toString();
+        
+        //TODO Do something with the message and return meaningfull stuff
+        return new NetsResponse(ActionCode.fromCode(actionCode), ode);
     }
     
 }

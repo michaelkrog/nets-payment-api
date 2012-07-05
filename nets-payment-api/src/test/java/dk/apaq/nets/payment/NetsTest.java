@@ -25,51 +25,11 @@ import static org.junit.Assert.*;
  */
 public class NetsTest {
     
-    private String authReqHex =   "00D80000524800022000000000000032"
-                                + "00000000000000000000000000000000"
-                                + "50534950313030303030313130307014"
-                                + "05C200E2800031363530313939393430"
-                                + "30303132333533313030303030303030"
-                                + "30303030303030383735303930373037"
-                                + "313131383336313431324B3030353030"
-                                + "4B303031333031303030303030353733"
-                                + "32303538383838383132332020202020"
-                                + "31393738353531202020202020202034"
-                                + "36536D69746820526164696F5C426F75"
-                                + "6C657661726420345C42726F62795C33"
-                                + "323636202020202020444B20444E4B30"
-                                + "3033363034444B4B";
-    
-    
-    private HttpServer server;
     private MockNetsServer netsServer = new MockNetsServer();
-    private NetsHandler netsHandler = new NetsHandler();
     private String serverUrl;
-    private MessageFactory messageFactory = new MessageFactory();
     
-    private class NetsHandler implements HttpHandler {
-
-        private byte[] lastMessageReceived;
-        
-        public void handle(HttpExchange he) throws IOException {
-            ByteArrayOutputStream buf = new ByteArrayOutputStream();
-            IOUtils.copy(he.getRequestBody(), buf);
-            lastMessageReceived = buf.toByteArray();
-            he.sendResponseHeaders(HttpURLConnection.HTTP_OK,0);
-            he.getResponseBody().close();
-        }
-
-        public byte[] getLastMessageReceived() {
-            return lastMessageReceived;
-        }
-        
-        
-        
-    }
-
     @Before
     public void setUp() throws Exception {
-        //messageFactory.setUseBinaryMessages(true);
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
         authReqFields.put(2, new LlvarParseInfo());
         authReqFields.put(3, new NumericParseInfo(6));
@@ -120,7 +80,7 @@ public class NetsTest {
     public void testCancel() throws Exception {
         System.out.println("cancel");
         Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
-        /*
+        
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card("cardno", 12, 11, 123);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
@@ -128,10 +88,10 @@ public class NetsTest {
         boolean recurring = false;
         boolean fraudSuspect = false;
         String terminalId = "test";
-        NetsResponse response = nets.cancel();
+        NetsResponse response = nets.cancel(merchant, card, money, orderId, terminalId, null, null, null);
         
         assertEquals(ActionCode.Approved , response.getActionCode());
-        assertNotNull(response.getOde());*/
+        assertNotNull(response.getOde());
     }
     
     /*

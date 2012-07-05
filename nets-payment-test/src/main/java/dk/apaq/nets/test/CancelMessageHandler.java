@@ -11,21 +11,18 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author michaelzachariassenkrog
  */
-public class AuthorizeMessageHandler  implements MessageHandler {
+public class CancelMessageHandler  implements MessageHandler {
 
-    private static final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
+private static final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private static final NumberFormat nf = NumberFormat.getIntegerInstance();
-    private Card card;
-    private String processCode, pointOfService, functionCode, reasonCode,
+    private String cardNo, processCode, approvalCode, functionCode, reasonCode,
             cardAcceptorBusinessCode, acquirerReference, cardAcceptorTerminalId,
-            cardAcceptorIdCode, cardAcceptorLocation, currencyCode;
+            cardAcceptorIdCode, cardAcceptorLocation, currencyCode, ode;
     
     private IsoMessage request;
     private IsoMessage response;
@@ -39,7 +36,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
             this.request = message;
             
             parse();
-            doAuthorizeAndResponse();
+            doCancelAndResponse();
             return response;
         } catch (ParseException ex) {
             throw new IOException("Unable to handlemessage.", ex);
@@ -49,8 +46,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
     }
     
     
-    private void doAuthorizeAndResponse() {
-        int amount = bank.getAmount(card);
+    private void doCancelAndResponse() {
         
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
@@ -59,35 +55,33 @@ public class AuthorizeMessageHandler  implements MessageHandler {
                                         MessageFields.FIELD_INDEX_PROCESSING_CODE,
                                         MessageFields.FIELD_INDEX_AMOUNT,
                                         MessageFields.FIELD_INDEX_LOCAL_TIME,
+                                        MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE,
                                         MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID,
                                         MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE,
-                                        MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL,
-                                        MessageFields.FIELD_INDEX_CURRENCY_CODE);
+                                        MessageFields.FIELD_INDEX_CURRENCY_CODE,
+                                        MessageFields.FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE);
         
-        response.setValue(MessageFields.FIELD_INDEX_APPROVAL_CODE, "12345", IsoType.ALPHA, 6);
         response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, "000", IsoType.NUMERIC, 3);
         response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, "12345", IsoType.LLLVAR, 255);
         
     }
     
     private void parse() throws ParseException {
-        String cardNo = request.getField(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER).toString();
+        cardNo = request.getField(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER).toString();
         processCode = request.getField(MessageFields.FIELD_INDEX_PROCESSING_CODE).toString(); 
         amount = nf.parse(request.getField(MessageFields.FIELD_INDEX_AMOUNT).toString()).intValue();
         localTime = df.parse(request.getField(MessageFields.FIELD_INDEX_LOCAL_TIME).toString());
-        String expire = request.getField(MessageFields.FIELD_INDEX_EXPIRATION).toString(); 
-        pointOfService = request.getField(MessageFields.FIELD_INDEX_POINT_OF_SERVICE).toString(); 
         functionCode = request.getField(MessageFields.FIELD_INDEX_FUNCTION_CODE).toString(); 
         reasonCode = request.getField(MessageFields.FIELD_INDEX_MESSAGE_REASON_CODE).toString(); 
         cardAcceptorBusinessCode = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE).toString(); 
         acquirerReference = request.getField(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE).toString(); 
+        approvalCode = request.getField(MessageFields.FIELD_INDEX_APPROVAL_CODE).toString(); 
         cardAcceptorTerminalId = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID).toString(); 
         cardAcceptorIdCode = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE).toString(); 
         cardAcceptorLocation = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION).toString(); 
         currencyCode = request.getField(MessageFields.FIELD_INDEX_CURRENCY_CODE).toString(); 
+        ode = request.getField(MessageFields.FIELD_INDEX_AUTH_ODE).toString();
         
-        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,4)).intValue(), 0);
         
     }
-    
 }

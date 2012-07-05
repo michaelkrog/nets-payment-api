@@ -1,8 +1,6 @@
 package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
-import com.solab.iso8583.IsoType;
-import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.AlphaParseInfo;
 import com.solab.iso8583.parse.FieldParseInfo;
@@ -13,7 +11,6 @@ import com.solab.iso8583.parse.NumericParseInfo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.MessageTypes;
 import dk.apaq.nets.payment.PGTMHeader;
 import dk.apaq.nets.payment.PsipHeader;
@@ -21,17 +18,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.text.ParseException;
 import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
 /**
