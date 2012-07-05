@@ -5,13 +5,11 @@ import com.solab.iso8583.parse.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import dk.apaq.nets.payment.io.HttpChannelFactory;
 import dk.apaq.nets.test.MockNetsServer;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.MalformedURLException;
+import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -102,8 +100,7 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
         
-        DefaultHttpClient client = new DefaultHttpClient();
-        Nets nets = new Nets(serverUrl, client);
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card("cardno", 12, 11, 123);
@@ -122,8 +119,7 @@ public class NetsTest {
     @Test
     public void testCancel() throws Exception {
         System.out.println("cancel");
-        DefaultHttpClient client = new DefaultHttpClient();
-        Nets nets = new Nets(serverUrl, client);
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
         /*
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card("cardno", 12, 11, 123);

@@ -33,18 +33,6 @@
             <version>0.6</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.0.2</version>
-            <classifier>tests</classifier>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.3</version>
@@ -53,11 +41,6 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.4</version>
-        </dependency>
-        <dependency>
-            <groupId>org.nucleus8583</groupId>
-            <artifactId>nucleus8583-core</artifactId>
-            <version>2.3.3</version>
         </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>

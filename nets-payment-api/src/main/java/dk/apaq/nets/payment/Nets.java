@@ -10,6 +10,8 @@ import com.solab.iso8583.parse.LllbinParseInfo;
 import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
+import dk.apaq.nets.payment.io.Channel;
+import dk.apaq.nets.payment.io.ChannelFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -38,14 +40,12 @@ public class Nets {
 
     private static final byte[] NETS_CUSTOM_HEADER = {0, -40, 0, 0, 82, 72, 0, 2, 32, 0, 0, 0, 0, 0, 0, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     
-    private final URL netsServiceUrl;
-    private final HttpClient httpClient;
-    private static final MessageFactory messageFactory = new MessageFactory();
+    private final ChannelFactory channelFactory;
     private final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
     private final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
     
-    static {
+    private void init() {
         Map<Integer, FieldParseInfo> authRespFields = new HashMap<Integer, FieldParseInfo>();
         authRespFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
         authRespFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
@@ -61,23 +61,24 @@ public class Nets {
         authRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
         authRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllbinParseInfo());
         
-        messageFactory.setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
+        channelFactory.getMessageFactory().setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
     }
 
     //TODO Change from using a http client to a socket client
-    public Nets(String netsServiceUrl, HttpClient httpClient) throws MalformedURLException {
-        this.netsServiceUrl = new URL(netsServiceUrl);
-        this.httpClient = httpClient;
+    public Nets(ChannelFactory channelFactory) throws MalformedURLException {
+        this.channelFactory = channelFactory;
         
         expireFormat.setMinimumIntegerDigits(2);
         expireFormat.setMaximumIntegerDigits(2);
         cvdFormat.setMinimumIntegerDigits(3);
         cvdFormat.setMaximumIntegerDigits(3);
+        
+        init();
     }
     
     
     public NetsResponse authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean fraudSuspect, String terminalId) throws IOException {
-        IsoMessage message = messageFactory.newMessage(MessageTypes.AUTHORIZATION_REQUEST);
+        IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.AUTHORIZATION_REQUEST);
         
         message.setIsoHeader("PSIP100000");
         
@@ -125,34 +126,8 @@ public class Nets {
         message.setField(56, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
         message.setField(57, new IsoValue<String>(IsoType.BINARY, "220", 3));
         
-        byte[] packet = message.writeToBuffer(0).array();
-        
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        
-        //Append special Nets header
-        PGTMHeader pgtmh = new PGTMHeader((short)(packet.length + 32), "0000524800022000000000000032000000000000000000000000", "0000");
-        buf.write(pgtmh.toByteArray());
-        
-        buf.write(packet);
-        
-        
-        HttpHost host = new HttpHost(netsServiceUrl.getHost(), netsServiceUrl.getPort(), netsServiceUrl.getProtocol());
-        HttpPost postMethod = new HttpPost(netsServiceUrl.getPath());
-        ByteArrayEntity entity = new ByteArrayEntity(buf.toByteArray());
-        postMethod.setEntity(entity);
-        HttpResponse response = httpClient.execute(host, postMethod);
-        
-        buf.reset();
-        IOUtils.copy(response.getEntity().getContent(), buf);
-        buf.flush();
-        
-        try {
-            message = messageFactory.parseMessage(buf.toByteArray(), 10);
-        } catch (ParseException ex) {
-            throw new IOException("Unable to parse response.", ex);
-        } catch (UnsupportedEncodingException ex) {
-            throw new IOException("Unable to parse response because of encoding issues.", ex);
-        }
+        Channel channel = channelFactory.createChannel();
+        message = channel.sendMessage(message);
         
         if(message == null) {
             throw new IOException("Message could not be parsed. Unknown message type?");
