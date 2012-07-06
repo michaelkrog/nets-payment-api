@@ -21,34 +21,24 @@ import org.apache.http.entity.ByteArrayEntity;
  *
  * @author krog
  */
-public class HttpChannel implements Channel {
+public class HttpChannel extends AbstractChannel {
 
-    private final MessageFactory messageFactory;
     private final HttpClient client;
     private final URL url;
 
     public HttpChannel(MessageFactory messageFactory, HttpClient client, URL url) {
-        this.messageFactory = messageFactory;
+        super(messageFactory);
         this.client = client;
         this.url = url;
     }
 
     
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
-        byte[] packet = message.writeToBuffer(0).array();
-        
-        ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        
-        //Append special Nets header
-        PGTMHeader pgtmh = new PGTMHeader((short)(packet.length + 32), "0000524800022000000000000032000000000000000000000000", "0000");
-        buf.write(pgtmh.toByteArray());
-        
-        buf.write(packet);
-        
+        byte[] msgData = messageToByteArray(message);
         
         HttpHost host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
         HttpPost postMethod = new HttpPost(url.getPath());
-        ByteArrayEntity entity = new ByteArrayEntity(buf.toByteArray());
+        ByteArrayEntity entity = new ByteArrayEntity(msgData);
         postMethod.setEntity(entity);
         HttpResponse response = client.execute(host, postMethod);
         
@@ -56,16 +46,11 @@ public class HttpChannel implements Channel {
             throw new IOException("The status code from the server was not ok. " + response.getStatusLine().getReasonPhrase());
         }
         
-        buf.reset();
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
         IOUtils.copy(response.getEntity().getContent(), buf);
         buf.flush();
-        try {
-            return messageFactory.parseMessage(buf.toByteArray(), 10);
-        } catch (ParseException ex) {
-            throw new IOException("Unable to parse response.", ex);
-        } catch (UnsupportedEncodingException ex) {
-            throw new IOException("Unable to parse response because of encoding issues.", ex);
-        }
+        
+        return byteArrayToMessage(buf.toByteArray());
     }
     
 }

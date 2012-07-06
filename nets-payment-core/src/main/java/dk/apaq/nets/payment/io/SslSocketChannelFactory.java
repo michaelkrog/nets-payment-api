@@ -24,7 +24,7 @@ public class SslSocketChannelFactory implements ChannelFactory {
 
     public Channel createChannel() throws IOException {
         Socket socket = socketFactory.createSocket(host, port);
-        return new SslSocketChannel(socket);
+        return new SslSocketChannel(messageFactory, socket);
     }
 
     public MessageFactory getMessageFactory() {
