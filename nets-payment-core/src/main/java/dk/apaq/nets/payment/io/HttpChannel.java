@@ -52,6 +52,10 @@ public class HttpChannel implements Channel {
         postMethod.setEntity(entity);
         HttpResponse response = client.execute(host, postMethod);
         
+        if(response.getStatusLine().getStatusCode()!=200) {
+            throw new IOException("The status code from the server was not ok. " + response.getStatusLine().getReasonPhrase());
+        }
+        
         buf.reset();
         IOUtils.copy(response.getEntity().getContent(), buf);
         buf.flush();

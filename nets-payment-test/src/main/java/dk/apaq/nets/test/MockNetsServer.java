@@ -1,6 +1,8 @@
 package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
+import com.solab.iso8583.IsoType;
+import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.AlphaParseInfo;
 import com.solab.iso8583.parse.FieldParseInfo;
@@ -11,6 +13,7 @@ import com.solab.iso8583.parse.NumericParseInfo;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
+import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
 import dk.apaq.nets.payment.PGTMHeader;
 import dk.apaq.nets.payment.PsipHeader;
@@ -36,25 +39,42 @@ public class MockNetsServer implements HttpHandler {
 
     public MockNetsServer() {
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
-        authReqFields.put(2, new LlvarParseInfo());
-        authReqFields.put(3, new NumericParseInfo(6));
-        authReqFields.put(4, new NumericParseInfo(12));
-        authReqFields.put(12, new NumericParseInfo(12));
-        authReqFields.put(14, new NumericParseInfo(4));
-        authReqFields.put(22, new AlphaParseInfo(12));
-        authReqFields.put(24, new NumericParseInfo(3));
-        authReqFields.put(25, new NumericParseInfo(4));
-        authReqFields.put(26, new NumericParseInfo(4));
-        authReqFields.put(31, new LlvarParseInfo());
-        authReqFields.put(41, new AlphaParseInfo(8));
-        authReqFields.put(42, new AlphaParseInfo(15));
-        authReqFields.put(43, new LlvarParseInfo());
-        authReqFields.put(47, new LllvarParseInfo());
-        authReqFields.put(49, new AlphaParseInfo(3));
-        authReqFields.put(56, new LllbinParseInfo());
-        authReqFields.put(57, new NumericParseInfo(3));
+        authReqFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        authReqFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
+        authReqFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
+        authReqFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
+        authReqFields.put(MessageFields.FIELD_INDEX_EXPIRATION, new NumericParseInfo(4));
+        authReqFields.put(MessageFields.FIELD_INDEX_POINT_OF_SERVICE, new AlphaParseInfo(12));
+        authReqFields.put(MessageFields.FIELD_INDEX_FUNCTION_CODE, new NumericParseInfo(3));
+        authReqFields.put(MessageFields.FIELD_INDEX_MESSAGE_REASON_CODE, new NumericParseInfo(4));
+        authReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(4));
+        authReqFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
+        authReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        authReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        authReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        authReqFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
+        authReqFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
+        authReqFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
         
         messageFactory.setParseMap(MessageTypes.AUTHORIZATION_REQUEST, authReqFields);
+        
+        Map<Integer, FieldParseInfo> reverseReqFields = new HashMap<Integer, FieldParseInfo>();
+        reverseReqFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        reverseReqFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_FUNCTION_CODE, new NumericParseInfo(3));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_MESSAGE_REASON_CODE, new NumericParseInfo(4));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(4));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
+        reverseReqFields.put(MessageFields.FIELD_INDEX_APPROVAL_CODE, new AlphaParseInfo(6));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        reverseReqFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
+        reverseReqFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        
+        messageFactory.setParseMap(MessageTypes.REVERSAL_ADVICE_REQUEST, reverseReqFields);        
     }
     
     
@@ -68,6 +88,10 @@ public class MockNetsServer implements HttpHandler {
         
         try {
             IsoMessage message = messageFactory.parseMessage(messageData, 10);
+            if(message == null) {
+                throw new NullPointerException("Message not recognized");
+            }
+            
             PsipHeader psipHeader = PsipHeader.fromString(message.getIsoHeader());
             if(!psipHeader.isValid() && psipHeader.getErrorCode() != PsipHeader.ErrorCode.OK) {
                 throw new IOException("Psipheader not valid");
@@ -86,6 +110,9 @@ public class MockNetsServer implements HttpHandler {
                 case MessageTypes.REVERSAL_ADVICE_REQUEST:
                     messageHandler = new ReversalMessageHandler();
                     break;
+                default:
+                    he.sendResponseHeaders(500, -1);
+                    return;
             }
             
             response = messageHandler.handleMessage(bank, message);
@@ -97,7 +124,7 @@ public class MockNetsServer implements HttpHandler {
             IOUtils.copy(new ByteArrayInputStream(buf.toByteArray()), he.getResponseBody());
             he.getResponseBody().flush();
         } catch (Exception ex) {
-            throw new IOException("Unable to handle message.", ex);
+            he.sendResponseHeaders(500, -1);
         }
     }
     

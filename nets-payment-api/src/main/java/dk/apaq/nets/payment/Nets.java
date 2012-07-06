@@ -3,7 +3,6 @@ package dk.apaq.nets.payment;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
-import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.AlphaParseInfo;
 import com.solab.iso8583.parse.FieldParseInfo;
 import com.solab.iso8583.parse.LllbinParseInfo;
@@ -12,25 +11,16 @@ import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ByteArrayEntity;
 import org.joda.money.Money;
+import org.apache.commons.lang.Validate;
 
 /**
  *
@@ -78,6 +68,12 @@ public class Nets {
     
     
     public NetsResponse authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean fraudSuspect, String terminalId) throws IOException {
+        Validate.notNull(merchant, "merchant must be specified");
+        Validate.notNull(card, "card must be specified");
+        Validate.notNull(money, "money must be specified");
+        Validate.notNull(orderId, "orderId must be specified");
+        Validate.notNull(terminalId, "terminalId must be specified");
+        
         IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.AUTHORIZATION_REQUEST);
         
         message.setIsoHeader("PSIP100000");
@@ -124,7 +120,6 @@ public class Nets {
         message.setField(47, new IsoValue<String>(IsoType.LLLVAR, "V503" + cvdFormat.format(card.getCvd())));
         message.setField(49, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
         message.setField(56, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
-        message.setField(57, new IsoValue<String>(IsoType.BINARY, "220", 3));
         
         Channel channel = channelFactory.createChannel();
         message = channel.sendMessage(message);
@@ -153,7 +148,17 @@ public class Nets {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public NetsResponse cancel(Merchant merchant, Card card, Money money, String orderId, String terminalId, String approvalCode, String ode, String lifeCycle) throws IOException {
+    public NetsResponse cancel(Merchant merchant, Card card, Money money, String orderId, String terminalId, String approvalCode, String ode) throws IOException {
+        Validate.notNull(merchant, "merchant must be specified");
+        Validate.notNull(card, "card must be specified");
+        Validate.notNull(money, "money must be specified");
+        Validate.notNull(orderId, "orderId must be specified");
+        Validate.notNull(terminalId, "terminalId must be specified");
+        Validate.notNull(approvalCode, "approvalCode must be specified");
+        Validate.notNull(ode, "ode must be specified");
+        Validate.isTrue(ode.length() == 255, "ode should be 255 of length.");
+        
+        
         IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.REVERSAL_ADVICE_REQUEST);
         
         message.setIsoHeader("PSIP100000");
@@ -190,7 +195,6 @@ public class Nets {
         message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new IsoValue<String>(IsoType.LLVAR, address.toString(), 99));
         message.setField(MessageFields.FIELD_INDEX_CURRENCY_CODE, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
         message.setField(MessageFields.FIELD_INDEX_AUTH_ODE, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
-        message.setField(MessageFields.FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE, new IsoValue<String>(IsoType.BINARY, lifeCycle, 3));
         
         Channel channel = channelFactory.createChannel();
         message = channel.sendMessage(message);

@@ -1,19 +1,11 @@
 package dk.apaq.nets.payment;
 
-import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.*;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
 import dk.apaq.nets.payment.io.HttpChannelFactory;
 import dk.apaq.nets.test.MockNetsServer;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.junit.*;
@@ -88,7 +80,9 @@ public class NetsTest {
         boolean recurring = false;
         boolean fraudSuspect = false;
         String terminalId = "test";
-        NetsResponse response = nets.cancel(merchant, card, money, orderId, terminalId, null, null, null);
+        String approvalCode = "app";
+        String ode = "ode                                                                                                                                                                                                                                                            ";
+        NetsResponse response = nets.cancel(merchant, card, money, orderId, terminalId, approvalCode, ode);
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());
