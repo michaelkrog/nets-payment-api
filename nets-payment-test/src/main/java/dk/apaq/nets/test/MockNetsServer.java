@@ -74,7 +74,27 @@ public class MockNetsServer implements HttpHandler {
         reverseReqFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
         reverseReqFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
         
-        messageFactory.setParseMap(MessageTypes.REVERSAL_ADVICE_REQUEST, reverseReqFields);        
+        messageFactory.setParseMap(MessageTypes.REVERSAL_ADVICE_REQUEST, reverseReqFields);      
+        
+        Map<Integer, FieldParseInfo> captureReqFields = new HashMap<Integer, FieldParseInfo>();
+        captureReqFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        captureReqFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
+        captureReqFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
+        captureReqFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
+        captureReqFields.put(MessageFields.FIELD_INDEX_EXPIRATION, new NumericParseInfo(4));
+        captureReqFields.put(MessageFields.FIELD_INDEX_POINT_OF_SERVICE, new AlphaParseInfo(12));
+        captureReqFields.put(MessageFields.FIELD_INDEX_FUNCTION_CODE, new NumericParseInfo(3));
+        captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(4));
+        captureReqFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
+        captureReqFields.put(MessageFields.FIELD_INDEX_APPROVAL_CODE, new AlphaParseInfo(6));
+        captureReqFields.put(MessageFields.FIELD_INDEX_ACTION_CODE, new NumericParseInfo(3));
+        captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        captureReqFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
+        captureReqFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        
+        messageFactory.setParseMap(MessageTypes.REVERSAL_ADVICE_REQUEST, captureReqFields);  
     }
     
     
