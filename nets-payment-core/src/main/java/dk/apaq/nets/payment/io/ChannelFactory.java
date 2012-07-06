@@ -1,6 +1,7 @@
 package dk.apaq.nets.payment.io;
 
 import com.solab.iso8583.MessageFactory;
+import java.io.IOException;
 
 /**
  *
@@ -8,6 +9,6 @@ import com.solab.iso8583.MessageFactory;
  */
 public interface ChannelFactory {
 
-    Channel createChannel();
+    Channel createChannel() throws IOException;
     MessageFactory getMessageFactory();
 }
