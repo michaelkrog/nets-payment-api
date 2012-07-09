@@ -54,8 +54,8 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         String ode = bank.authorize(card, amount);
         
         ActionCode actionCode = ode == null ? ActionCode.Insufficient_Funds : ActionCode.Approved;
+        ode = "";
         
-        //TODO if ode is null then respond with error
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
