@@ -68,6 +68,26 @@ public class NetsTest {
         assertNotNull(response.getOde());
 
     }
+    
+     @Test
+    public void testAuthorizeInsuffecientFunds() throws Exception {
+        System.out.println("authorize");
+        
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        
+        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
+        Card card = new Card("45711234123412341234", 12, 12, "123");
+        Money money = Money.of(CurrencyUnit.USD, 131231.2);
+        String orderId = "orderid";
+        boolean recurring = false;
+        boolean fraudSuspect = false;
+        String terminalId = "test";
+        NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+        
+        assertEquals(ActionCode.Insufficient_Funds , response.getActionCode());
+        assertNotNull(response.getOde());
+
+    }
 
     @Test
     public void testCancel() throws Exception {

@@ -13,12 +13,17 @@ import org.apache.commons.codec.binary.Hex;
  */
 public class PGTMHeader {
 
+    public static final String DEFAULT_IDENTITY = "0000524800022000000000000032000000000000000000000000";
     private final short length;
     private final String identity;
     private final String networkResponseCode;
 
-    public PGTMHeader(short length, String identity, String networkResponseCode) {
-        this.length = length;
+    public PGTMHeader(int length, String networkResponseCode) {
+        this(length, DEFAULT_IDENTITY, networkResponseCode);
+    }
+    
+    public PGTMHeader(int length, String identity, String networkResponseCode) {
+        this.length = (short) (length + 32);
         this.identity = identity;
         this.networkResponseCode = networkResponseCode;
     }
@@ -94,6 +99,7 @@ public class PGTMHeader {
         byte[] fixedData = Arrays.copyOfRange(data, 30, 32);
         
         short length = (short)(lengthData[1] & 0xFF | (lengthData[0] << 8) );
+        length-=32; //We take away the length of the header - 32 bytes
         String identity = new String(Hex.encodeHex(identityData));
         String networkResponseCode = new String(Hex.encodeHex(networkData));
         

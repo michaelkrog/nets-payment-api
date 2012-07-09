@@ -2,6 +2,7 @@ package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
+import dk.apaq.nets.payment.ActionCode;
 import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
@@ -52,6 +53,8 @@ public class AuthorizeMessageHandler  implements MessageHandler {
     private void doAuthorizeAndResponse() {
         String ode = bank.authorize(card, amount);
         
+        ActionCode actionCode = ode == null ? ActionCode.Insufficient_Funds : ActionCode.Approved;
+        
         //TODO if ode is null then respond with error
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
@@ -66,7 +69,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
                                         MessageFields.FIELD_INDEX_CURRENCY_CODE);
         
         response.setValue(MessageFields.FIELD_INDEX_APPROVAL_CODE, "12345", IsoType.ALPHA, 6);
-        response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, "000", IsoType.NUMERIC, 3);
+        response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, actionCode.getCode(), IsoType.NUMERIC, 3);
         response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, ode, IsoType.LLLVAR, 255);
         
     }

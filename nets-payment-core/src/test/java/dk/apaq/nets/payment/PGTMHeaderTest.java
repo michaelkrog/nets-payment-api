@@ -21,7 +21,7 @@ public class PGTMHeaderTest {
     public void testToByteArray() throws DecoderException {
         System.out.println("toByteArray");
         
-        PGTMHeader instance = new PGTMHeader((short)216, "0000524800022000000000000032000000000000000000000000", "0000");
+        PGTMHeader instance = new PGTMHeader((short)184, "0000524800022000000000000032000000000000000000000000", "0000");
         byte[] expResult = Hex.decodeHex(header.toCharArray());
         byte[] result = instance.toByteArray();
         assertArrayEquals(expResult, result);
@@ -36,7 +36,7 @@ public class PGTMHeaderTest {
         System.out.println("fromByteArray");
         byte[] data = Hex.decodeHex(header.toCharArray());
         
-        PGTMHeader expResult = new PGTMHeader((short)216, "0000524800022000000000000032000000000000000000000000", "0000");
+        PGTMHeader expResult = new PGTMHeader((short)184, "0000524800022000000000000032000000000000000000000000", "0000");
         PGTMHeader result = PGTMHeader.fromByteArray(data);
         assertEquals(expResult, result);
     }

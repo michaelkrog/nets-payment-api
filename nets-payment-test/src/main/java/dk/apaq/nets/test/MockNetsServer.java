@@ -36,6 +36,7 @@ public class MockNetsServer implements HttpHandler {
     private Bank bank = new Bank();
     private HttpServer httpServer = null;
     private MessageFactory messageFactory = new MessageFactory();
+    private boolean nextRequestFails = false;
 
     public MockNetsServer() {
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
@@ -107,6 +108,10 @@ public class MockNetsServer implements HttpHandler {
         PGTMHeader header = PGTMHeader.fromByteArray(headerData);
         
         try {
+            if(!"0000".equals(header.getNetworkResponseCode())) {
+                throw new IOException("Network code in request is invalid.");
+            }
+        
             IsoMessage message = messageFactory.parseMessage(messageData, 10);
             if(message == null) {
                 throw new NullPointerException("Message not recognized");
@@ -140,11 +145,20 @@ public class MockNetsServer implements HttpHandler {
             ByteArrayOutputStream buf = new ByteArrayOutputStream();
             response.write(buf, 0);
             
-            he.sendResponseHeaders(200, buf.size());
+            byte[] packet = buf.toByteArray();
+            header = new PGTMHeader(buf.size(), "0000");
+            he.sendResponseHeaders(200, header.getLength());
+            
+            buf.reset();
+            buf.write(header.toByteArray());
+            buf.write(packet);
+            
             IOUtils.copy(new ByteArrayInputStream(buf.toByteArray()), he.getResponseBody());
             he.getResponseBody().flush();
         } catch (Exception ex) {
-            he.sendResponseHeaders(500, -1);
+            PGTMHeader failHeader = new PGTMHeader(0, "0001");
+            he.sendResponseHeaders(200, -1);
+            IOUtils.copy(new ByteArrayInputStream(failHeader.toByteArray()), he.getResponseBody());
         }
     }
     
@@ -173,6 +187,10 @@ public class MockNetsServer implements HttpHandler {
     
     public boolean isStarted() {
         return false;
+    }
+
+    public void setNextRequestFails(boolean nextRequestFails) {
+        this.nextRequestFails = nextRequestFails;
     }
 
 }
