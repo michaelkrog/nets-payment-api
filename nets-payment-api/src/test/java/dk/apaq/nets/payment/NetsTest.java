@@ -3,6 +3,7 @@ package dk.apaq.nets.payment;
 import com.solab.iso8583.parse.*;
 import dk.apaq.nets.payment.io.HttpChannelFactory;
 import dk.apaq.nets.test.MockNetsServer;
+import java.io.IOException;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -46,9 +47,6 @@ public class NetsTest {
     }
 
 
-    /**
-     * Test of authorize method, of class Nets.
-     */
     @Test
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
@@ -66,6 +64,30 @@ public class NetsTest {
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());
+
+    }
+    
+    @Test
+    public void testNetworkError() throws Exception {
+        System.out.println("authorize");
+        
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        
+        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
+        Card card = new Card("45711234123412341234", 12, 12, "123");
+        Money money = Money.of(CurrencyUnit.USD, 12.2);
+        String orderId = "orderid";
+        boolean recurring = false;
+        boolean fraudSuspect = false;
+        String terminalId = "test";
+        netsServer.setNextRequestFails(true);
+        
+        try {
+            NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+            fail("Should have failed");
+        } catch(IOException ex) {
+            
+        }
 
     }
     

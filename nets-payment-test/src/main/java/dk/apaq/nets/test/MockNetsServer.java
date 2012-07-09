@@ -111,7 +111,13 @@ public class MockNetsServer implements HttpHandler {
             if(!"0000".equals(header.getNetworkResponseCode())) {
                 throw new IOException("Network code in request is invalid.");
             }
-        
+            
+            if(nextRequestFails) {
+                nextRequestFails = false;
+                throw new IOException("FAIL");
+            }
+            
+            
             IsoMessage message = messageFactory.parseMessage(messageData, 10);
             if(message == null) {
                 throw new NullPointerException("Message not recognized");
@@ -157,8 +163,9 @@ public class MockNetsServer implements HttpHandler {
             he.getResponseBody().flush();
         } catch (Exception ex) {
             PGTMHeader failHeader = new PGTMHeader(0, "0001");
-            he.sendResponseHeaders(200, -1);
+            he.sendResponseHeaders(200, failHeader.getLength());
             IOUtils.copy(new ByteArrayInputStream(failHeader.toByteArray()), he.getResponseBody());
+            he.getResponseBody().flush();
         }
     }
     
