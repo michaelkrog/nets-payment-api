@@ -2,6 +2,7 @@ package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
+import dk.apaq.nets.payment.ActionCode;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
 import java.io.IOException;
@@ -43,7 +44,11 @@ public class ReversalMessageHandler implements MessageHandler {
     }
 
     private void doCancelAndResponse() {
-
+        String result = bank.cancel(ode);
+        
+        ActionCode actionCode = result == null ? ActionCode.Invalid_Card_Number : ActionCode.Approved;
+        ode = "";
+        
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
@@ -57,8 +62,8 @@ public class ReversalMessageHandler implements MessageHandler {
                 MessageFields.FIELD_INDEX_CURRENCY_CODE,
                 MessageFields.FIELD_INDEX_AUTHORIZATION_LIFE_CYCLE);
 
-        response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, "000", IsoType.NUMERIC, 3);
-        response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, "12345", IsoType.LLLVAR, 255);
+        response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, actionCode.getCode(), IsoType.NUMERIC, 3);
+        response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, ode, IsoType.LLLVAR, 255);
 
     }
 
