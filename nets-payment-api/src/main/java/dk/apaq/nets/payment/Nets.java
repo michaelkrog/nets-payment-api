@@ -117,7 +117,7 @@ public class Nets {
         message.setField(41, new IsoValue<String>(IsoType.ALPHA, terminalId, 8));
         message.setField(42, new IsoValue<String>(IsoType.ALPHA, merchant.getMerchantId(), 15));
         message.setField(43, new IsoValue<String>(IsoType.LLVAR, address.toString(), 99));
-        message.setField(47, new IsoValue<String>(IsoType.LLLVAR, "V503" + cvdFormat.format(card.getCvd())));
+        message.setField(47, new IsoValue<String>(IsoType.LLLVAR, "V503" + card.getCvd()));
         message.setField(49, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
         message.setField(56, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
         

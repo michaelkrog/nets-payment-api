@@ -34,6 +34,7 @@ public class NetsTest {
         authReqFields.put(26, new NumericParseInfo(4));
                 
         InetAddress address = Inet4Address.getLocalHost();
+        netsServer.getBank().addCard(new Card("45711234123412341234", 12, 12, "123"), 100000);
         netsServer.start(12345);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
@@ -55,7 +56,7 @@ public class NetsTest {
         Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
-        Card card = new Card("cardno", 12, 11, 123);
+        Card card = new Card("45711234123412341234", 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
         boolean recurring = false;
@@ -74,7 +75,7 @@ public class NetsTest {
         Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
-        Card card = new Card("cardno", 12, 11, 123);
+        Card card = new Card("45711234123412341234", 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
         boolean recurring = false;

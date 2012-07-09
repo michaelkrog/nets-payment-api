@@ -50,8 +50,9 @@ public class AuthorizeMessageHandler  implements MessageHandler {
     
     
     private void doAuthorizeAndResponse() {
-        int amount = bank.getAmount(card);
+        String ode = bank.authorize(card, amount);
         
+        //TODO if ode is null then respond with error
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
@@ -66,7 +67,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         
         response.setValue(MessageFields.FIELD_INDEX_APPROVAL_CODE, "12345", IsoType.ALPHA, 6);
         response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, "000", IsoType.NUMERIC, 3);
-        response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, "12345", IsoType.LLLVAR, 255);
+        response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, ode, IsoType.LLLVAR, 255);
         
     }
     
@@ -86,7 +87,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         cardAcceptorLocation = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION).toString(); 
         currencyCode = request.getField(MessageFields.FIELD_INDEX_CURRENCY_CODE).toString(); 
         
-        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,4)).intValue(), 0);
+        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,4)).intValue(), "123");
         
     }
     

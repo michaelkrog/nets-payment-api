@@ -23,7 +23,7 @@ public class CaptureMessageHandler  implements MessageHandler {
     private Card card;
     private String processCode, pointOfService, functionCode, reasonCode,
             cardAcceptorBusinessCode, acquirerReference, cardAcceptorTerminalId,
-            cardAcceptorIdCode, cardAcceptorLocation, currencyCode;
+            cardAcceptorIdCode, cardAcceptorLocation, currencyCode, ode;
     
     private IsoMessage request;
     private IsoMessage response;
@@ -48,8 +48,9 @@ public class CaptureMessageHandler  implements MessageHandler {
     
     
     private void doCaptureAndResponse() {
-        int amount = bank.getAmount(card);
+        String result = bank.capture(ode, amount);
         
+        //TODO if result is null
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
@@ -64,7 +65,7 @@ public class CaptureMessageHandler  implements MessageHandler {
                                         MessageFields.FIELD_INDEX_CURRENCY_CODE);
         
         response.setValue(MessageFields.FIELD_INDEX_ACTION_CODE, "000", IsoType.NUMERIC, 3);
-        response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, "12345", IsoType.LLLVAR, 255);
+        response.setValue(MessageFields.FIELD_INDEX_AUTH_ODE, result, IsoType.LLLVAR, 255);
         
     }
     
@@ -83,8 +84,9 @@ public class CaptureMessageHandler  implements MessageHandler {
         cardAcceptorIdCode = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE).toString(); 
         cardAcceptorLocation = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION).toString(); 
         currencyCode = request.getField(MessageFields.FIELD_INDEX_CURRENCY_CODE).toString(); 
+        ode = request.getField(MessageFields.FIELD_INDEX_AUTH_ODE).toString(); 
         
-        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,4)).intValue(), 0);
+        card = new Card(cardNo, nf.parse(expire.substring(0,2)).intValue(), nf.parse(expire.substring(2,4)).intValue(), "123");
         
     }
     
