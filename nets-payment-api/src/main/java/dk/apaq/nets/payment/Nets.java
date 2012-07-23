@@ -188,11 +188,11 @@ public class Nets {
         @Override
         protected IsoMessage buildMessage() {
             IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.AUTHORIZATION_REQUEST);
-            message.setIsoHeader("PSIP100000");
+            message.setIsoHeader(PsipHeader.OK.toString());
 
             String expire = expireFormat.format(card.getExpireYear()) + expireFormat.format(card.getExpireMonth());
             String processingCode = gambling ? ProcessingCode.QuasiCash.getCode() : ProcessingCode.GoodsAndServices.getCode();
-            String pointOfService = recurring ? "K00540K00130" : "K00500K00130";
+            String pointOfService = recurring ? PointOfService.InternetMerchantRecurring.getCode() : PointOfService.InternetMerchant.getCode();
             String function = estimatedAmount ? FunctionCode.Authorize_Original_Estimated_Amount.getCode() : FunctionCode.Authorize_Original_Accurate_Amount.getCode();
             String reason = fraudSuspect ? "1511" : "0000";
             String address = buildAddressField();
@@ -232,8 +232,7 @@ public class Nets {
         @Override
         protected IsoMessage buildMessage() {
             IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.REVERSAL_ADVICE_REQUEST);
-
-            message.setIsoHeader("PSIP100000");
+            message.setIsoHeader(PsipHeader.OK.toString());
 
             String function = FunctionCode.Reverse_FullReversal.getCode();
             String reason = MessageReason.CustomerCancellation.getCode();
@@ -260,7 +259,7 @@ public class Nets {
 
     public class CaptureRequest extends Request<CaptureRequest> {
 
-        private boolean recurring, amountDiffers;
+        private boolean recurring, amountDiffers, gambling;
         private ActionCode actionCode;
         private String approvalCode;
 
@@ -294,7 +293,6 @@ public class Nets {
         public ActionCode getActionCode() {
             return actionCode;
         }
-
         
         public CaptureRequest setApprovalCode(String approvalCode) {
             this.approvalCode = approvalCode;
@@ -304,24 +302,30 @@ public class Nets {
         public String getApprovalCode() {
             return approvalCode;
         }
-        
-        
-        
 
+        public CaptureRequest setGambling(boolean gambling) {
+            this.gambling = gambling;
+            return this;
+        }
+
+        public boolean isGambling() {
+            return gambling;
+        }
+        
         @Override
         protected IsoMessage buildMessage() {
             IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.AUTHORIZATION_REQUEST);
-
-            message.setIsoHeader("PSIP100000");
+            message.setIsoHeader(PsipHeader.OK.toString());
 
             String expire = expireFormat.format(card.getExpireYear()) + expireFormat.format(card.getExpireMonth());
-            String pointOfService = recurring ? "K00540K00130" : "K00500K00130";
+            String processingCode = gambling ? ProcessingCode.QuasiCash.getCode() : ProcessingCode.GoodsAndServices.getCode();
+            String pointOfService = recurring ? PointOfService.InternetMerchantRecurring.getCode() : PointOfService.InternetMerchant.getCode();
             String function = amountDiffers ? FunctionCode.Capture_Amount_Differs.getCode() : FunctionCode.Capture_Amount_Accurate.getCode();
 
             String address = buildAddressField();
 
             message.setField(2, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
-            message.setField(3, new IsoValue<Integer>(IsoType.NUMERIC, 000000, 6));
+            message.setField(3, new IsoValue<String>(IsoType.NUMERIC, processingCode, 6));
             message.setField(4, new IsoValue<Integer>(IsoType.NUMERIC, money.getAmountMinorInt(), 12));
             message.setField(12, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), 12));
             message.setField(14, new IsoValue<String>(IsoType.NUMERIC, expire, 4));

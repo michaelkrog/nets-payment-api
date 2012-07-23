@@ -6,6 +6,8 @@ package dk.apaq.nets.payment;
  */
 public class PsipHeader {
     
+    public static final PsipHeader OK = new PsipHeader(ErrorCode.OK, true);
+    
     public enum ErrorCode {
         OK("000"),Bad_Request("400"), Internal_Server_Error("500"), Not_Implemented("501"), Service_Unavailable("503");
 
@@ -31,8 +33,10 @@ public class PsipHeader {
     }
     
     
+    
     private final ErrorCode errorCode;
     private final boolean valid;
+    
     
     protected PsipHeader(ErrorCode code, boolean valid) {
         this.errorCode = code;
@@ -45,6 +49,12 @@ public class PsipHeader {
 
     public ErrorCode getErrorCode() {
         return errorCode;
+    }
+
+    
+    @Override
+    public String toString() {
+        return "PSIP100" + errorCode.getCode();
     }
     
     public static PsipHeader fromString(String header) {
