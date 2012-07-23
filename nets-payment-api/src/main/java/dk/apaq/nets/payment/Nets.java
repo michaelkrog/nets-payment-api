@@ -157,8 +157,74 @@ public class Nets {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void capture() {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public NetsResponse capture(Merchant merchant, Card card, Money money, String orderId, boolean recurring, String terminalId, String approvalCode, ActionCode actionCode) throws IOException {
+        Validate.notNull(merchant, "merchant must be specified");
+        Validate.notNull(card, "card must be specified");
+        Validate.notNull(money, "money must be specified");
+        Validate.notNull(orderId, "orderId must be specified");
+        Validate.notNull(terminalId, "terminalId must be specified");
+        Validate.notNull(approvalCode, "approvalcode must be specified");
+        Validate.notNull(actionCode, "actioncode must be specified");
+        
+        IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.AUTHORIZATION_REQUEST);
+        
+        message.setIsoHeader("PSIP100000");
+        
+        String expire = expireFormat.format(card.getExpireYear()) + expireFormat.format(card.getExpireMonth());
+        String pointOfService = recurring ? "K00540K00130" : "K00500K00130";
+        String function = FunctionCode.Original_Accurate_Amount.getCode();
+        
+        StringBuilder address = new StringBuilder();
+        address.append(merchant.getName());
+        address.append("\\");
+        address.append(merchant.getAddress().getStreet());
+        address.append("\\");
+        address.append(merchant.getAddress().getCity());
+        address.append("\\");
+        
+        address.append(merchant.getAddress().getPostalCode());
+        for(int i=address.length();i<96;i++) {
+            address.append(" ");
+        }
+        
+        address.append(merchant.getAddress().getCountryCode());
+        
+        String ode = "";
+        for(int i=0;i<255;i++) {
+            ode +="x";
+        }
+        
+        
+        message.setField(2, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
+        message.setField(3, new IsoValue<Integer>(IsoType.NUMERIC, 000000, 6));
+        message.setField(4, new IsoValue<Integer>(IsoType.NUMERIC, money.getAmountMinorInt(), 12));
+        message.setField(12, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), 12));
+        message.setField(14, new IsoValue<String>(IsoType.NUMERIC, expire, 4));
+        message.setField(22, new IsoValue<String>(IsoType.ALPHA, pointOfService, 12));
+        message.setField(24, new IsoValue<String>(IsoType.NUMERIC, function, 3));
+        message.setField(26, new IsoValue<String>(IsoType.NUMERIC, "0000", 4));
+        message.setField(31, new IsoValue<String>(IsoType.LLVAR, orderId));
+        message.setField(38, new IsoValue<String>(IsoType.ALPHA, approvalCode, 6));
+        message.setField(39, new IsoValue<String>(IsoType.NUMERIC, actionCode.getCode(), 3));
+        message.setField(41, new IsoValue<String>(IsoType.ALPHA, terminalId, 8));
+        message.setField(42, new IsoValue<String>(IsoType.ALPHA, merchant.getMerchantId(), 15));
+        message.setField(43, new IsoValue<String>(IsoType.LLVAR, address.toString(), 99));
+        message.setField(47, new IsoValue<String>(IsoType.LLLVAR, "V503" + card.getCvd()));
+        message.setField(49, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
+        message.setField(56, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
+        
+        Channel channel = channelFactory.createChannel();
+        message = channel.sendMessage(message);
+        
+        if(message == null) {
+            throw new IOException("Message could not be parsed. Unknown message type?");
+        }
+        
+        String actionCodeString = message.getField(MessageFields.FIELD_INDEX_ACTION_CODE).toString();
+        ode = message.getField(MessageFields.FIELD_INDEX_AUTH_ODE).toString();
+        
+        //TODO Do something with the message and return meaningfull stuff
+        return new NetsResponse(ActionCode.fromCode(actionCodeString), ode);
     }
 
     public NetsResponse cancel(Merchant merchant, Card card, Money money, String orderId, String terminalId, String approvalCode, String ode) throws IOException {
