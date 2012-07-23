@@ -48,7 +48,14 @@ public class CaptureMessageHandler  implements MessageHandler {
     
     
     private void doCaptureAndResponse() {
-        String result = bank.capture(ode, amount);
+        
+        String result;
+        
+        if("".equals(processCode)) {
+            result = bank.refund(ode);
+        } else {
+            result = bank.capture(ode, amount);
+        }
         
         //TODO if result is null
         response = new IsoMessage();

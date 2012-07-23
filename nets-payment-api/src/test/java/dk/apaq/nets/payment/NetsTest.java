@@ -1,6 +1,8 @@
 package dk.apaq.nets.payment;
 
 import com.solab.iso8583.parse.*;
+import dk.apaq.nets.payment.io.Channel;
+import dk.apaq.nets.payment.io.ChannelFactory;
 import dk.apaq.nets.payment.io.HttpChannelFactory;
 import dk.apaq.nets.test.MockNetsServer;
 import java.io.IOException;
@@ -51,6 +53,7 @@ public class NetsTest {
     }
 
 
+
     @Test
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
@@ -61,10 +64,7 @@ public class NetsTest {
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        boolean recurring = false;
-        boolean fraudSuspect = false;
-        String terminalId = "test";
-        NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());
@@ -75,7 +75,7 @@ public class NetsTest {
     
     @Test
     public void testNetworkError() throws Exception {
-        System.out.println("authorize");
+        System.out.println("authorizeNetworkError");
         
         Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
         
@@ -83,13 +83,10 @@ public class NetsTest {
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        boolean recurring = false;
-        boolean fraudSuspect = false;
-        String terminalId = "test";
         netsServer.setNextRequestFails(true);
         
         try {
-            NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+            NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
             fail("Should have failed");
         } catch(IOException ex) {
             
@@ -99,7 +96,7 @@ public class NetsTest {
     
      @Test
     public void testAuthorizeInsuffecientFunds() throws Exception {
-        System.out.println("authorize");
+        System.out.println("authorizeInsuffecientFunds");
         
         Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
         
@@ -107,10 +104,7 @@ public class NetsTest {
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 131231.2);
         String orderId = "orderid";
-        boolean recurring = false;
-        boolean fraudSuspect = false;
-        String terminalId = "test";
-        NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
         
         assertEquals(ActionCode.Insufficient_Funds , response.getActionCode());
         assertNotNull(response.getOde());
@@ -126,17 +120,18 @@ public class NetsTest {
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        boolean recurring = false;
-        boolean fraudSuspect = false;
         String terminalId = "test";
         String approvalCode = "app";
         
         //Need to authorize first
-        NetsResponse response = nets.authorize(merchant, card, money, orderId, recurring, fraudSuspect, terminalId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
         assertEquals(ActionCode.Approved , response.getActionCode());
         
         //Now cancel
-        response = nets.cancel(merchant, card, money, orderId, terminalId, approvalCode, response.getOde());
+        response = nets.reverse(merchant, card, money, orderId)
+                .setApprovalCode(approvalCode)
+                .setOde(response.getOde())
+                .send();
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());
