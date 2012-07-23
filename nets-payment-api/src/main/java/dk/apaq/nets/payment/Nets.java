@@ -52,9 +52,22 @@ public class Nets {
         authRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
         
         channelFactory.getMessageFactory().setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
+        
+        Map<Integer, FieldParseInfo> reverseRespFields = new HashMap<Integer, FieldParseInfo>();
+        reverseRespFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        reverseRespFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
+        reverseRespFields.put(MessageFields.FIELD_INDEX_ACTION_CODE, new NumericParseInfo(3));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
+        reverseRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        
+        channelFactory.getMessageFactory().setParseMap(MessageTypes.REVERSAL_ADVICE_RESPONSE, reverseRespFields);
     }
 
-    //TODO Change from using a http client to a socket client
     public Nets(ChannelFactory channelFactory) throws MalformedURLException {
         this.channelFactory = channelFactory;
         

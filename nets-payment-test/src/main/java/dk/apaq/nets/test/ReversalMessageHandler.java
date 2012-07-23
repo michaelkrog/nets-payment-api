@@ -51,7 +51,7 @@ public class ReversalMessageHandler implements MessageHandler {
         
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
-        response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
+        response.setType(MessageTypes.REVERSAL_ADVICE_RESPONSE);
         response.copyFieldsFrom(request, MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER,
                 MessageFields.FIELD_INDEX_PROCESSING_CODE,
                 MessageFields.FIELD_INDEX_AMOUNT,
