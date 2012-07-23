@@ -46,7 +46,7 @@ public class ReversalMessageHandler implements MessageHandler {
     private void doCancelAndResponse() {
         String result = bank.cancel(ode);
         
-        ActionCode actionCode = result == null ? ActionCode.Invalid_Card_Number : ActionCode.Approved;
+        ActionCode actionCode = result == null ? ActionCode.No_Card_Record : ActionCode.Approved;
         ode = "";
         
         response = new IsoMessage();

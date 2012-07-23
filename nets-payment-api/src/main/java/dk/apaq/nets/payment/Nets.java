@@ -49,7 +49,7 @@ public class Nets {
         authRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
         authRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
         authRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
-        authRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllbinParseInfo());
+        authRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
         
         channelFactory.getMessageFactory().setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
     }

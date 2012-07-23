@@ -46,11 +46,12 @@ public class Bank {
         private long amount;
         private long capturedAmount;
         private String id = UUID.randomUUID().toString();
-        private String ode = UUID.randomUUID().toString();
+        private String ode;
 
         public Transaction(CardEntry card, long amount) {
             this.card = card;
             this.amount = amount;
+            rebuildOde();
         }
         
         public void markAuthorized() {
@@ -108,7 +109,11 @@ public class Bank {
         }
         
         private void rebuildOde() {
-            ode = UUID.randomUUID().toString();
+            ode = "oDe123" + UUID.randomUUID().toString();
+            ode = ode.replace("-", "");
+            for(int i = ode.length();i<255;i++) {
+                ode +=" ";
+            }
         }
         
         
