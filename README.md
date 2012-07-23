@@ -8,7 +8,7 @@ Merchant Guide can be acquired here: http://www.nets.eu/dk-da/Service/verifikati
 Or by mailing Nets: it-verification@nets.eu
 
 Example of the current API state:
-'''Java
+'''java
 Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
 Card card = new Card("<card>", 12, 12, "123");
 Money money = Money.of(CurrencyUnit.USD, 199.99);
