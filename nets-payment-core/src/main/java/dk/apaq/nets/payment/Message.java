@@ -15,7 +15,7 @@ public abstract class Message {
     protected long amount;
     protected Date localTime;
     protected PointOfService pointOfService = PointOfService.InternetMerchant;
-    protected FunctionCode functionCode = FunctionCode.Original_Accurate_Amount;
+    protected FunctionCode functionCode = FunctionCode.Authorize_Original_Accurate_Amount;
     protected MessageReason messageReason = MessageReason.NormalTransaction;
     protected String acquirerReference;
     protected String cardAcceptorTerminalId;
