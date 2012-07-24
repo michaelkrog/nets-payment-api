@@ -21,7 +21,7 @@ public class CaptureMessageHandler  implements MessageHandler {
    private static final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private static final NumberFormat nf = NumberFormat.getIntegerInstance();
     private Card card;
-    private String processCode, pointOfService, functionCode, reasonCode,
+    private String processCode, pointOfService, functionCode,
             cardAcceptorBusinessCode, acquirerReference, cardAcceptorTerminalId,
             cardAcceptorIdCode, cardAcceptorLocation, currencyCode, ode;
     
@@ -60,7 +60,7 @@ public class CaptureMessageHandler  implements MessageHandler {
         //TODO if result is null
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
-        response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
+        response.setType(MessageTypes.CAPTURE_RESPONSE);
         response.copyFieldsFrom(request, MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER,
                                         MessageFields.FIELD_INDEX_PROCESSING_CODE,
                                         MessageFields.FIELD_INDEX_AMOUNT,
@@ -84,7 +84,6 @@ public class CaptureMessageHandler  implements MessageHandler {
         String expire = request.getField(MessageFields.FIELD_INDEX_EXPIRATION).toString(); 
         pointOfService = request.getField(MessageFields.FIELD_INDEX_POINT_OF_SERVICE).toString(); 
         functionCode = request.getField(MessageFields.FIELD_INDEX_FUNCTION_CODE).toString(); 
-        reasonCode = request.getField(MessageFields.FIELD_INDEX_MESSAGE_REASON_CODE).toString(); 
         cardAcceptorBusinessCode = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE).toString(); 
         acquirerReference = request.getField(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE).toString(); 
         cardAcceptorTerminalId = request.getField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID).toString(); 

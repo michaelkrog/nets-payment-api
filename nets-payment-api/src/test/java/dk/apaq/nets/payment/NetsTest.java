@@ -128,10 +128,29 @@ public class NetsTest {
         assertEquals(ActionCode.Approved , response.getActionCode());
         
         //Now cancel
-        response = nets.reverse(merchant, card, money, orderId)
-                .setApprovalCode(approvalCode)
-                .setOde(response.getOde())
-                .send();
+        response = nets.reverse(merchant, card, money, orderId, response.getOde(), approvalCode).send();
+        
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());
+    }
+    
+    @Test
+    public void testCapture() throws Exception {
+        System.out.println("cancel");
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        
+        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Money money = Money.of(CurrencyUnit.USD, 12.2);
+        String orderId = "orderid";
+        
+        //Need to authorize first
+        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        
+        //Now capture
+        String approvalCode = ""; //TODO Get from auth response instead
+        response = nets.capture(merchant, card, money, orderId, response.getOde(), approvalCode, response.getActionCode()).send();
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());

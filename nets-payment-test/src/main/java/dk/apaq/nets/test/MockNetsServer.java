@@ -92,6 +92,7 @@ public class MockNetsServer implements HttpHandler {
         captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
         captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
         captureReqFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        captureReqFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
         captureReqFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
         captureReqFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
         

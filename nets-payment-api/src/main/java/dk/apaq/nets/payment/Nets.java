@@ -45,6 +45,10 @@ public class Nets {
         protected String ode, terminalId = "";
 
         public Request(Merchant merchant, Card card, Money money, String orderId) {
+            this(merchant, card, money, orderId, null);
+        }
+        
+        public Request(Merchant merchant, Card card, Money money, String orderId, String ode) {
             Validate.notNull(merchant, "merchant must be specified");
             Validate.notNull(card, "card must be specified");
             Validate.notNull(money, "money must be specified");
@@ -54,11 +58,7 @@ public class Nets {
             this.card = card;
             this.money = money;
             this.orderId = orderId;
-        }
-
-        public T setOde(String ode) {
             this.ode = ode;
-            return (T) this;
         }
 
         public T setTerminalId(String terminalId) {
@@ -220,13 +220,9 @@ public class Nets {
 
         private String approvalCode;
 
-        private ReverseRequest(Merchant merchant, Card card, Money money, String orderId) {
-            super(merchant, card, money, orderId);
-        }
-
-        public ReverseRequest setApprovalCode(String approvalCode) {
+        private ReverseRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode) {
+            super(merchant, card, money, orderId, ode);
             this.approvalCode = approvalCode;
-            return this;
         }
 
         @Override
@@ -263,8 +259,10 @@ public class Nets {
         private ActionCode actionCode;
         private String approvalCode;
 
-        private CaptureRequest(Merchant merchant, Card card, Money money, String orderId) {
-            super(merchant, card, money, orderId);
+        private CaptureRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode, ActionCode actionCode) {
+            super(merchant, card, money, orderId, ode);
+            this.actionCode = actionCode;
+            this.approvalCode = approvalCode;
         }
 
         public CaptureRequest setRecurring(boolean recurring) {
@@ -285,20 +283,10 @@ public class Nets {
             return amountDiffers;
         }
 
-        public CaptureRequest setActionCode(ActionCode actionCode) {
-            this.actionCode = actionCode;
-            return this;
-        }
-
         public ActionCode getActionCode() {
             return actionCode;
         }
         
-        public CaptureRequest setApprovalCode(String approvalCode) {
-            this.approvalCode = approvalCode;
-            return this;
-        }
-
         public String getApprovalCode() {
             return approvalCode;
         }
@@ -314,7 +302,7 @@ public class Nets {
         
         @Override
         protected IsoMessage buildMessage() {
-            IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.AUTHORIZATION_REQUEST);
+            IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.CAPTURE_REQUEST);
             message.setIsoHeader(PsipHeader.OK.toString());
 
             String expire = expireFormat.format(card.getExpireYear()) + expireFormat.format(card.getExpireMonth());
@@ -362,7 +350,6 @@ public class Nets {
         authRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
         authRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
         authRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
-
         channelFactory.getMessageFactory().setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
 
         Map<Integer, FieldParseInfo> reverseRespFields = new HashMap<Integer, FieldParseInfo>();
@@ -376,9 +363,23 @@ public class Nets {
         reverseRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
         reverseRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
         reverseRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
-
         channelFactory.getMessageFactory().setParseMap(MessageTypes.REVERSAL_ADVICE_RESPONSE, reverseRespFields);
 
+        Map<Integer, FieldParseInfo> captureRespFields = new HashMap<Integer, FieldParseInfo>();
+        captureRespFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        captureRespFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
+        captureRespFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
+        captureRespFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
+        captureRespFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
+        captureRespFields.put(MessageFields.FIELD_INDEX_ACTION_CODE, new NumericParseInfo(3));
+        captureRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        captureRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        captureRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
+        captureRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
+        captureRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
+        captureRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        channelFactory.getMessageFactory().setParseMap(MessageTypes.CAPTURE_RESPONSE, captureRespFields);
+        
         LOG.info("Nets instance initialized.");
 
     }
@@ -398,11 +399,11 @@ public class Nets {
         return new AuthorizeRequest(merchant, card, money, orderId);
     }
 
-    public CaptureRequest capture(Merchant merchant, Card card, Money money, String orderId, boolean recurring, String terminalId, String approvalCode, ActionCode actionCode, boolean amountDiffers) throws IOException {
-        return new CaptureRequest(merchant, card, money, orderId);
+    public CaptureRequest capture(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode, ActionCode actionCode) throws IOException {
+        return new CaptureRequest(merchant, card, money, orderId, ode, approvalCode, actionCode);
     }
 
-    public ReverseRequest reverse(Merchant merchant, Card card, Money money, String orderId) throws IOException {
-        return new ReverseRequest(merchant, card, money, orderId);
+    public ReverseRequest reverse(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode) throws IOException {
+        return new ReverseRequest(merchant, card, money, orderId, ode, approvalCode);
     }
 }
