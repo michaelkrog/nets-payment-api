@@ -58,7 +58,7 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -77,7 +77,7 @@ public class NetsTest {
     public void testNetworkError() throws Exception {
         System.out.println("authorizeNetworkError");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -98,7 +98,7 @@ public class NetsTest {
     public void testAuthorizeInsuffecientFunds() throws Exception {
         System.out.println("authorizeInsuffecientFunds");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -114,7 +114,7 @@ public class NetsTest {
     @Test
     public void testCancel() throws Exception {
         System.out.println("cancel");
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -128,7 +128,7 @@ public class NetsTest {
         assertEquals(ActionCode.Approved , response.getActionCode());
         
         //Now cancel
-        response = nets.reverse(merchant, card, money, orderId, response.getOde(), approvalCode).send();
+        response = nets.reverse(merchant, card, orderId).send();
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());
@@ -137,7 +137,7 @@ public class NetsTest {
     @Test
     public void testCapture() throws Exception {
         System.out.println("cancel");
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)));
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -150,7 +150,7 @@ public class NetsTest {
         
         //Now capture
         String approvalCode = ""; //TODO Get from auth response instead
-        response = nets.capture(merchant, card, money, orderId, response.getOde(), approvalCode, response.getActionCode()).send();
+        response = nets.capture(merchant, card, money, orderId).send();
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());

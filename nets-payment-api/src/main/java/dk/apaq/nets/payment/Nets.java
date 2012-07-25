@@ -35,6 +35,7 @@ public class Nets {
     private final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
     private final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
+    private final Persistence persistence;
 
     private abstract class Request<T> {
 
@@ -384,8 +385,9 @@ public class Nets {
 
     }
 
-    public Nets(ChannelFactory channelFactory) throws MalformedURLException {
+    public Nets(ChannelFactory channelFactory, Persistence persistence) throws MalformedURLException {
         this.channelFactory = channelFactory;
+        this.persistence = persistence;
 
         expireFormat.setMinimumIntegerDigits(2);
         expireFormat.setMaximumIntegerDigits(2);
@@ -396,14 +398,53 @@ public class Nets {
     }
 
     public AuthorizeRequest authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException {
-        return new AuthorizeRequest(merchant, card, money, orderId);
+        AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId);
+        NetsResponse response =  request.send();
+        
+        if(response.getActionCode() == ActionCode.Approved ||
+           response.getActionCode() == ActionCode.Approved2 ||
+           response.getActionCode() == ActionCode.Approved3 ||
+           response.getActionCode() == ActionCode.Approved4) {
+            TransactionData data = new TransactionData();
+            data.setApprovedAmount(money);
+            data.setOde(response.getOde());
+            persistence.save(merchant, orderId, data);
+        }
+        
+        return request;
     }
 
-    public CaptureRequest capture(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode, ActionCode actionCode) throws IOException {
-        return new CaptureRequest(merchant, card, money, orderId, ode, approvalCode, actionCode);
+    public CaptureRequest capture(Merchant merchant, Card card, Money money, String orderId) throws IOException {
+        TransactionData data = persistence.read(merchant, orderId);
+        CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
+        NetsResponse response =  request.send();
+        
+        if(response.getActionCode() == ActionCode.Approved ||
+           response.getActionCode() == ActionCode.Approved2 ||
+           response.getActionCode() == ActionCode.Approved3 ||
+           response.getActionCode() == ActionCode.Approved4) {
+            TransactionData newData = new TransactionData();
+            newData.setOde(response.getOde());
+            persistence.save(merchant, orderId, data);
+        }
+        
+        return request;
     }
 
-    public ReverseRequest reverse(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode) throws IOException {
-        return new ReverseRequest(merchant, card, money, orderId, ode, approvalCode);
+    public ReverseRequest reverse(Merchant merchant, Card card, String orderId) throws IOException {
+        TransactionData data = persistence.read(merchant, orderId);
+        ReverseRequest request = new ReverseRequest(merchant, card, data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
+        NetsResponse response =  request.send();
+        
+        if(response.getActionCode() == ActionCode.Approved ||
+           response.getActionCode() == ActionCode.Approved2 ||
+           response.getActionCode() == ActionCode.Approved3 ||
+           response.getActionCode() == ActionCode.Approved4) {
+            TransactionData newData = new TransactionData();
+            newData.setOde(response.getOde());
+            persistence.save(merchant, orderId, data);
+        }
+        
+        return request;
     }
 }
