@@ -136,9 +136,13 @@ public class Nets {
 
             String actionCodeString = message.getField(MessageFields.FIELD_INDEX_ACTION_CODE).toString();
             String ode = message.getField(MessageFields.FIELD_INDEX_AUTH_ODE).toString();
-
-            //TODO Do something with the message and return meaningfull stuff
-            return new NetsResponse(ActionCode.fromCode(actionCodeString), ode);
+            String approvalCode = null;
+            
+            if(message.hasField(MessageFields.FIELD_INDEX_APPROVAL_CODE)) {
+                approvalCode = message.getField(MessageFields.FIELD_INDEX_APPROVAL_CODE).toString();
+            }
+            
+            return new NetsResponse(ActionCode.fromCode(actionCodeString), ode, approvalCode);
         }
     }
 
@@ -397,7 +401,7 @@ public class Nets {
         init();
     }
 
-    public AuthorizeRequest authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException {
+    public void authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
         AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId);
         NetsResponse response =  request.send();
         
@@ -406,15 +410,17 @@ public class Nets {
            response.getActionCode() == ActionCode.Approved3 ||
            response.getActionCode() == ActionCode.Approved4) {
             TransactionData data = new TransactionData();
+            data.setActionCode(response.getActionCode());
             data.setApprovedAmount(money);
             data.setOde(response.getOde());
+            data.setApprovalCode(response.getApprovalCode());
             persistence.save(merchant, orderId, data);
+        } else {
+            throw new NetsException("Authorize not approved.", response.getActionCode());
         }
-        
-        return request;
     }
 
-    public CaptureRequest capture(Merchant merchant, Card card, Money money, String orderId) throws IOException {
+    public void capture(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
         TransactionData data = persistence.read(merchant, orderId);
         CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
         NetsResponse response =  request.send();
@@ -424,14 +430,15 @@ public class Nets {
            response.getActionCode() == ActionCode.Approved3 ||
            response.getActionCode() == ActionCode.Approved4) {
             TransactionData newData = new TransactionData();
+            newData.setActionCode(response.getActionCode());
             newData.setOde(response.getOde());
             persistence.save(merchant, orderId, data);
+        } else {
+            throw new NetsException("Capture not approved.", response.getActionCode());
         }
-        
-        return request;
     }
 
-    public ReverseRequest reverse(Merchant merchant, Card card, String orderId) throws IOException {
+    public void reverse(Merchant merchant, Card card, String orderId) throws IOException, NetsException {
         TransactionData data = persistence.read(merchant, orderId);
         ReverseRequest request = new ReverseRequest(merchant, card, data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
         NetsResponse response =  request.send();
@@ -441,10 +448,11 @@ public class Nets {
            response.getActionCode() == ActionCode.Approved3 ||
            response.getActionCode() == ActionCode.Approved4) {
             TransactionData newData = new TransactionData();
+            newData.setActionCode(response.getActionCode());
             newData.setOde(response.getOde());
             persistence.save(merchant, orderId, data);
+        } else {
+            throw new NetsException("Reverse not approved.", response.getActionCode());
         }
-        
-        return request;
     }
 }

@@ -58,18 +58,20 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
+        MemPersistence persistence = new MemPersistence();
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
+        nets.authorize(merchant, card, money, orderId);
         
-        assertEquals(ActionCode.Approved , response.getActionCode());
-        assertNotNull(response.getOde());
-        assertEquals(255, response.getOde().length());
-        assertTrue(response.getOde().startsWith("oDe123"));
+        TransactionData data = persistence.read(merchant, orderId);
+        assertEquals(ActionCode.Approved , data.getActionCode());
+        assertNotNull(data.getOde());
+        assertEquals(255, data.getOde().length());
+        assertTrue(data.getOde().startsWith("oDe123"));
 
     }
     
@@ -86,7 +88,7 @@ public class NetsTest {
         netsServer.setNextRequestFails(true);
         
         try {
-            NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
+            nets.authorize(merchant, card, money, orderId);
             fail("Should have failed");
         } catch(IOException ex) {
             
@@ -98,23 +100,28 @@ public class NetsTest {
     public void testAuthorizeInsuffecientFunds() throws Exception {
         System.out.println("authorizeInsuffecientFunds");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
+        MemPersistence persistence = new MemPersistence();
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 131231.2);
         String orderId = "orderid";
-        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
         
-        assertEquals(ActionCode.Insufficient_Funds , response.getActionCode());
-        assertNotNull(response.getOde());
+        try {
+            nets.authorize(merchant, card, money, orderId);
+            fail("Should not be approved.");
+        } catch(NetsException ex) {
+            assertEquals(ActionCode.Insufficient_Funds , ex.getActionCode());
+        }
 
     }
 
     @Test
     public void testCancel() throws Exception {
         System.out.println("cancel");
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
+        MemPersistence persistence = new MemPersistence();
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -124,20 +131,21 @@ public class NetsTest {
         String approvalCode = "app";
         
         //Need to authorize first
-        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
-        assertEquals(ActionCode.Approved , response.getActionCode());
+        nets.authorize(merchant, card, money, orderId);
         
         //Now cancel
-        response = nets.reverse(merchant, card, orderId).send();
+        nets.reverse(merchant, card, orderId);
         
-        assertEquals(ActionCode.Approved , response.getActionCode());
-        assertNotNull(response.getOde());
+        TransactionData data = persistence.read(merchant, orderId);
+        assertEquals(ActionCode.Approved , data.getActionCode());
+        assertNotNull(data.getOde());
     }
     
     @Test
     public void testCapture() throws Exception {
         System.out.println("cancel");
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
+        MemPersistence persistence = new MemPersistence();
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -145,15 +153,14 @@ public class NetsTest {
         String orderId = "orderid";
         
         //Need to authorize first
-        NetsResponse response = nets.authorize(merchant, card, money, orderId).send();
-        assertEquals(ActionCode.Approved , response.getActionCode());
+        nets.authorize(merchant, card, money, orderId);
         
         //Now capture
-        String approvalCode = ""; //TODO Get from auth response instead
-        response = nets.capture(merchant, card, money, orderId).send();
+        nets.capture(merchant, card, money, orderId);
         
-        assertEquals(ActionCode.Approved , response.getActionCode());
-        assertNotNull(response.getOde());
+        TransactionData data = persistence.read(merchant, orderId);
+        assertEquals(ActionCode.Approved , data.getActionCode());
+        assertNotNull(data.getOde());
     }
     
     /*
