@@ -47,5 +47,10 @@
       <artifactId>nets-payment-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>crud4j-core</artifactId>
+      <version>1.2.1</version>
+    </dependency>
   </dependencies>
 </project>

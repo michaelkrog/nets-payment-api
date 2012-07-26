@@ -1,6 +1,8 @@
 package dk.apaq.nets.payment;
 
 import com.solab.iso8583.parse.*;
+import dk.apaq.crud.Crud;
+import dk.apaq.crud.core.CollectionCrud;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import dk.apaq.nets.payment.io.HttpChannelFactory;
@@ -26,6 +28,12 @@ public class NetsTest {
     
     private MockNetsServer netsServer = new MockNetsServer();
     private String serverUrl;
+    private Crud.Editable<String, TransactionData> crud = new CollectionCrud<TransactionData>(new CollectionCrud.IdResolver<TransactionData>() {
+
+        public String getIdForBean(TransactionData bean) {
+            return bean.getId();
+        }
+    });
     
     @Before
     public void setUp() throws Exception {
@@ -58,8 +66,7 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
         
-        MemPersistence persistence = new MemPersistence();
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -67,7 +74,7 @@ public class NetsTest {
         String orderId = "orderid";
         nets.authorize(merchant, card, money, orderId);
         
-        TransactionData data = persistence.read(merchant, orderId);
+        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         assertEquals(255, data.getOde().length());
@@ -79,7 +86,7 @@ public class NetsTest {
     public void testNetworkError() throws Exception {
         System.out.println("authorizeNetworkError");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), new MemPersistence());
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -100,8 +107,7 @@ public class NetsTest {
     public void testAuthorizeInsuffecientFunds() throws Exception {
         System.out.println("authorizeInsuffecientFunds");
         
-        MemPersistence persistence = new MemPersistence();
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -120,8 +126,7 @@ public class NetsTest {
     @Test
     public void testCancel() throws Exception {
         System.out.println("cancel");
-        MemPersistence persistence = new MemPersistence();
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -136,7 +141,7 @@ public class NetsTest {
         //Now cancel
         nets.reverse(merchant, card, orderId);
         
-        TransactionData data = persistence.read(merchant, orderId);
+        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
     }
@@ -144,8 +149,7 @@ public class NetsTest {
     @Test
     public void testCapture() throws Exception {
         System.out.println("cancel");
-        MemPersistence persistence = new MemPersistence();
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), persistence);
+        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
         
         Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
@@ -158,7 +162,7 @@ public class NetsTest {
         //Now capture
         nets.capture(merchant, card, money, orderId);
         
-        TransactionData data = persistence.read(merchant, orderId);
+        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
     }

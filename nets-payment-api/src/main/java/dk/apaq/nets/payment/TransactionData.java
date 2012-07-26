@@ -8,12 +8,20 @@ import org.joda.money.Money;
  */
 public class TransactionData {
     
+    private String _id;
     private String ode;
     private String approvalCode;
     private Money approvedAmount;
     private ActionCode actionCode;
 
-    
+    public String getId() {
+        return _id;
+    }
+
+    public void setId(String id) {
+        this._id = id;
+    }
+
     public ActionCode getActionCode() {
         return actionCode;
     }

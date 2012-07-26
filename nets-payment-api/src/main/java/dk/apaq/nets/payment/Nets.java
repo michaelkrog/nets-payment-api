@@ -9,6 +9,7 @@ import com.solab.iso8583.parse.LllbinParseInfo;
 import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
+import dk.apaq.crud.Crud;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class Nets {
     private final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
     private final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
-    private final Persistence persistence;
+    private final Crud.Editable<String, TransactionData> crud;
 
     private abstract class Request<T> {
 
@@ -389,9 +390,9 @@ public class Nets {
 
     }
 
-    public Nets(ChannelFactory channelFactory, Persistence persistence) throws MalformedURLException {
+    public Nets(ChannelFactory channelFactory, Crud.Editable<String, TransactionData> persistence) throws MalformedURLException {
         this.channelFactory = channelFactory;
-        this.persistence = persistence;
+        this.crud = persistence;
 
         expireFormat.setMinimumIntegerDigits(2);
         expireFormat.setMaximumIntegerDigits(2);
@@ -410,18 +411,19 @@ public class Nets {
            response.getActionCode() == ActionCode.Approved3 ||
            response.getActionCode() == ActionCode.Approved4) {
             TransactionData data = new TransactionData();
+            data.setId(buildTransactionDataId(merchant, orderId));
             data.setActionCode(response.getActionCode());
             data.setApprovedAmount(money);
             data.setOde(response.getOde());
             data.setApprovalCode(response.getApprovalCode());
-            persistence.save(merchant, orderId, data);
+            crud.create(data);
         } else {
             throw new NetsException("Authorize not approved.", response.getActionCode());
         }
     }
 
     public void capture(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
-        TransactionData data = persistence.read(merchant, orderId);
+        TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
         CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
         NetsResponse response =  request.send();
         
@@ -429,17 +431,16 @@ public class Nets {
            response.getActionCode() == ActionCode.Approved2 ||
            response.getActionCode() == ActionCode.Approved3 ||
            response.getActionCode() == ActionCode.Approved4) {
-            TransactionData newData = new TransactionData();
-            newData.setActionCode(response.getActionCode());
-            newData.setOde(response.getOde());
-            persistence.save(merchant, orderId, data);
+            data.setActionCode(response.getActionCode());
+            data.setOde(response.getOde());
+            crud.update(data);
         } else {
             throw new NetsException("Capture not approved.", response.getActionCode());
         }
     }
 
     public void reverse(Merchant merchant, Card card, String orderId) throws IOException, NetsException {
-        TransactionData data = persistence.read(merchant, orderId);
+        TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
         ReverseRequest request = new ReverseRequest(merchant, card, data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
         NetsResponse response =  request.send();
         
@@ -447,12 +448,15 @@ public class Nets {
            response.getActionCode() == ActionCode.Approved2 ||
            response.getActionCode() == ActionCode.Approved3 ||
            response.getActionCode() == ActionCode.Approved4) {
-            TransactionData newData = new TransactionData();
-            newData.setActionCode(response.getActionCode());
-            newData.setOde(response.getOde());
-            persistence.save(merchant, orderId, data);
+            data.setActionCode(response.getActionCode());
+            data.setOde(response.getOde());
+            crud.update(data);
         } else {
             throw new NetsException("Reverse not approved.", response.getActionCode());
         }
+    }
+    
+    private String buildTransactionDataId(Merchant merchant, String orderId) {
+        return merchant.getMerchantId() + "_" + orderId;
     }
 }
