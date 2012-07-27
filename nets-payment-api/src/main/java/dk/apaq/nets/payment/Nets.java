@@ -5,7 +5,6 @@ import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.parse.AlphaParseInfo;
 import com.solab.iso8583.parse.FieldParseInfo;
-import com.solab.iso8583.parse.LllbinParseInfo;
 import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
@@ -49,7 +48,7 @@ public class Nets {
         public Request(Merchant merchant, Card card, Money money, String orderId) {
             this(merchant, card, money, orderId, null);
         }
-        
+
         public Request(Merchant merchant, Card card, Money money, String orderId, String ode) {
             Validate.notNull(merchant, "merchant must be specified");
             Validate.notNull(card, "card must be specified");
@@ -135,14 +134,14 @@ public class Nets {
                 throw new IOException("Message could not be parsed. Unknown message type?");
             }
 
-            String actionCodeString = message.getField(MessageFields.FIELD_INDEX_ACTION_CODE).toString();
-            String ode = message.getField(MessageFields.FIELD_INDEX_AUTH_ODE).toString();
+            String actionCodeString = message.getField(MessageFields.ACTION_CODE).toString();
+            String ode = message.getField(MessageFields.AUTH_ODE).toString();
             String approvalCode = null;
-            
-            if(message.hasField(MessageFields.FIELD_INDEX_APPROVAL_CODE)) {
-                approvalCode = message.getField(MessageFields.FIELD_INDEX_APPROVAL_CODE).toString();
+
+            if (message.hasField(MessageFields.APPROVAL_CODE)) {
+                approvalCode = message.getField(MessageFields.APPROVAL_CODE).toString();
             }
-            
+
             return new NetsResponse(ActionCode.fromCode(actionCodeString), ode, approvalCode);
         }
     }
@@ -200,7 +199,7 @@ public class Nets {
             String processingCode = gambling ? ProcessingCode.QuasiCash.getCode() : ProcessingCode.GoodsAndServices.getCode();
             String pointOfService = recurring ? PointOfService.InternetMerchantRecurring.getCode() : PointOfService.InternetMerchant.getCode();
             String function = estimatedAmount ? FunctionCode.Authorize_Original_Estimated_Amount.getCode() : FunctionCode.Authorize_Original_Accurate_Amount.getCode();
-            String reason = fraudSuspect ? "1511" : "0000";
+            String reason = fraudSuspect ? MessageReason.SuspeciousOfFraud.getCode() : MessageReason.NormalTransaction.getCode();
             String address = buildAddressField();
 
             message.setField(2, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
@@ -225,12 +224,32 @@ public class Nets {
     public class ReverseRequest extends Request<ReverseRequest> {
 
         private String approvalCode;
+        private boolean fraudSuspected;
+        private boolean malfunctionSuspected;
 
         private ReverseRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode) {
             super(merchant, card, money, orderId, ode);
             this.approvalCode = approvalCode;
         }
 
+        public boolean isFraudSuspected() {
+            return fraudSuspected;
+        }
+
+        public boolean isMalfunctionSuspected() {
+            return malfunctionSuspected;
+        }
+
+        public ReverseRequest setMalfunctionSuspected(boolean malfunctionSuspected) {
+            this.malfunctionSuspected = malfunctionSuspected;
+            return this;
+        }
+
+        public ReverseRequest setFraudSuspected(boolean fraudSuspected) {
+            this.fraudSuspected = fraudSuspected;
+            return this;
+        }
+        
         @Override
         protected IsoMessage buildMessage() {
             IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.REVERSAL_ADVICE_REQUEST);
@@ -238,23 +257,31 @@ public class Nets {
 
             String function = FunctionCode.Reverse_FullReversal.getCode();
             String reason = MessageReason.CustomerCancellation.getCode();
+            
+            if(fraudSuspected) {
+                reason = MessageReason.SuspectedFraud.getCode();
+            }
+
+            if(malfunctionSuspected) {
+                reason = MessageReason.SuspectedMalfunction.getCode();
+            }
 
             String address = buildAddressField();
 
-            message.setField(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
-            message.setField(MessageFields.FIELD_INDEX_PROCESSING_CODE, new IsoValue<Integer>(IsoType.NUMERIC, 000000, 6));
-            message.setField(MessageFields.FIELD_INDEX_AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, money.getAmountMinorInt(), 12));
-            message.setField(MessageFields.FIELD_INDEX_LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), 12));
-            message.setField(MessageFields.FIELD_INDEX_FUNCTION_CODE, new IsoValue<String>(IsoType.NUMERIC, function, 3));
-            message.setField(MessageFields.FIELD_INDEX_MESSAGE_REASON_CODE, new IsoValue<String>(IsoType.NUMERIC, reason, 4));
-            message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_BUSINESS_CODE, new IsoValue<String>(IsoType.NUMERIC, "0000", 4));
-            message.setField(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new IsoValue<String>(IsoType.LLVAR, orderId));
-            message.setField(MessageFields.FIELD_INDEX_APPROVAL_CODE, new IsoValue<String>(IsoType.ALPHA, approvalCode, 6));
-            message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new IsoValue<String>(IsoType.ALPHA, fillString(terminalId, ' ', 8), 8));
-            message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new IsoValue<String>(IsoType.ALPHA, merchant.getMerchantId(), 15));
-            message.setField(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_NAME_LOCATION, new IsoValue<String>(IsoType.LLVAR, address, 99));
-            message.setField(MessageFields.FIELD_INDEX_CURRENCY_CODE, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
-            message.setField(MessageFields.FIELD_INDEX_AUTH_ODE, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
+            message.setField(MessageFields.PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
+            message.setField(MessageFields.PROCESSING_CODE, new IsoValue<Integer>(IsoType.NUMERIC, 000000, 6));
+            message.setField(MessageFields.AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, money.getAmountMinorInt(), 12));
+            message.setField(MessageFields.LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), 12));
+            message.setField(MessageFields.FUNCTION_CODE, new IsoValue<String>(IsoType.NUMERIC, function, 3));
+            message.setField(MessageFields.MESSAGE_REASON_CODE, new IsoValue<String>(IsoType.NUMERIC, reason, 4));
+            message.setField(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE, new IsoValue<String>(IsoType.NUMERIC, "0000", 4));
+            message.setField(MessageFields.ACQUIRER_REFERENCE, new IsoValue<String>(IsoType.LLVAR, orderId));
+            message.setField(MessageFields.APPROVAL_CODE, new IsoValue<String>(IsoType.ALPHA, approvalCode, 6));
+            message.setField(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new IsoValue<String>(IsoType.ALPHA, fillString(terminalId, ' ', 8), 8));
+            message.setField(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new IsoValue<String>(IsoType.ALPHA, merchant.getMerchantId(), 15));
+            message.setField(MessageFields.CARD_ACCEPTOR_NAME_LOCATION, new IsoValue<String>(IsoType.LLVAR, address, 99));
+            message.setField(MessageFields.CURRENCY_CODE, new IsoValue<String>(IsoType.ALPHA, money.getCurrencyUnit().getCurrencyCode(), 3));
+            message.setField(MessageFields.AUTH_ODE, new IsoValue<String>(IsoType.LLLVAR, ode, 255));
             return message;
         }
     }
@@ -292,7 +319,7 @@ public class Nets {
         public ActionCode getActionCode() {
             return actionCode;
         }
-        
+
         public String getApprovalCode() {
             return approvalCode;
         }
@@ -305,7 +332,7 @@ public class Nets {
         public boolean isGambling() {
             return gambling;
         }
-        
+
         @Override
         protected IsoMessage buildMessage() {
             IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.CAPTURE_REQUEST);
@@ -339,53 +366,83 @@ public class Nets {
         }
     }
 
+    private class NetsResponse {
+
+        private ActionCode actionCode;
+        private String ode;
+        private String approvalCode;
+
+        public NetsResponse(ActionCode actionCode, String ode) {
+            this.actionCode = actionCode;
+            this.ode = ode;
+        }
+
+        public NetsResponse(ActionCode actionCode, String ode, String approvalCode) {
+            this.actionCode = actionCode;
+            this.ode = ode;
+            this.approvalCode = approvalCode;
+        }
+
+        public ActionCode getActionCode() {
+            return actionCode;
+        }
+
+        public String getOde() {
+            return ode;
+        }
+
+        public String getApprovalCode() {
+            return approvalCode;
+        }
+    }
+
     private void init() {
         LOG.info("Initializing Nets instance.");
 
         Map<Integer, FieldParseInfo> authRespFields = new HashMap<Integer, FieldParseInfo>();
-        authRespFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        authRespFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
-        authRespFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
-        authRespFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
-        authRespFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
-        authRespFields.put(MessageFields.FIELD_INDEX_APPROVAL_CODE, new AlphaParseInfo(6));
-        authRespFields.put(MessageFields.FIELD_INDEX_ACTION_CODE, new NumericParseInfo(3));
-        authRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
-        authRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
-        authRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
-        authRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
-        authRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
-        authRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        authRespFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        authRespFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
+        authRespFields.put(MessageFields.AMOUNT, new NumericParseInfo(12));
+        authRespFields.put(MessageFields.LOCAL_TIME, new NumericParseInfo(12));
+        authRespFields.put(MessageFields.ACQUIRER_REFERENCE, new LlvarParseInfo());
+        authRespFields.put(MessageFields.APPROVAL_CODE, new AlphaParseInfo(6));
+        authRespFields.put(MessageFields.ACTION_CODE, new NumericParseInfo(3));
+        authRespFields.put(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        authRespFields.put(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        authRespFields.put(MessageFields.ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
+        authRespFields.put(MessageFields.ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
+        authRespFields.put(MessageFields.CURRENCY_CODE, new AlphaParseInfo(3));
+        authRespFields.put(MessageFields.AUTH_ODE, new LllvarParseInfo());
         channelFactory.getMessageFactory().setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
 
         Map<Integer, FieldParseInfo> reverseRespFields = new HashMap<Integer, FieldParseInfo>();
-        reverseRespFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        reverseRespFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
-        reverseRespFields.put(MessageFields.FIELD_INDEX_ACTION_CODE, new NumericParseInfo(3));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
-        reverseRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        reverseRespFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        reverseRespFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
+        reverseRespFields.put(MessageFields.AMOUNT, new NumericParseInfo(12));
+        reverseRespFields.put(MessageFields.LOCAL_TIME, new NumericParseInfo(12));
+        reverseRespFields.put(MessageFields.ACQUIRER_REFERENCE, new LlvarParseInfo());
+        reverseRespFields.put(MessageFields.ACTION_CODE, new NumericParseInfo(3));
+        reverseRespFields.put(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        reverseRespFields.put(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        reverseRespFields.put(MessageFields.CURRENCY_CODE, new AlphaParseInfo(3));
+        reverseRespFields.put(MessageFields.AUTH_ODE, new LllvarParseInfo());
         channelFactory.getMessageFactory().setParseMap(MessageTypes.REVERSAL_ADVICE_RESPONSE, reverseRespFields);
 
         Map<Integer, FieldParseInfo> captureRespFields = new HashMap<Integer, FieldParseInfo>();
-        captureRespFields.put(MessageFields.FIELD_INDEX_PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        captureRespFields.put(MessageFields.FIELD_INDEX_PROCESSING_CODE, new NumericParseInfo(6));
-        captureRespFields.put(MessageFields.FIELD_INDEX_AMOUNT, new NumericParseInfo(12));
-        captureRespFields.put(MessageFields.FIELD_INDEX_LOCAL_TIME, new NumericParseInfo(12));
-        captureRespFields.put(MessageFields.FIELD_INDEX_ACQUIRER_REFERENCE, new LlvarParseInfo());
-        captureRespFields.put(MessageFields.FIELD_INDEX_ACTION_CODE, new NumericParseInfo(3));
-        captureRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
-        captureRespFields.put(MessageFields.FIELD_INDEX_CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
-        captureRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
-        captureRespFields.put(MessageFields.FIELD_INDEX_ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
-        captureRespFields.put(MessageFields.FIELD_INDEX_CURRENCY_CODE, new AlphaParseInfo(3));
-        captureRespFields.put(MessageFields.FIELD_INDEX_AUTH_ODE, new LllvarParseInfo());
+        captureRespFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        captureRespFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
+        captureRespFields.put(MessageFields.AMOUNT, new NumericParseInfo(12));
+        captureRespFields.put(MessageFields.LOCAL_TIME, new NumericParseInfo(12));
+        captureRespFields.put(MessageFields.ACQUIRER_REFERENCE, new LlvarParseInfo());
+        captureRespFields.put(MessageFields.ACTION_CODE, new NumericParseInfo(3));
+        captureRespFields.put(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
+        captureRespFields.put(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
+        captureRespFields.put(MessageFields.ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
+        captureRespFields.put(MessageFields.ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
+        captureRespFields.put(MessageFields.CURRENCY_CODE, new AlphaParseInfo(3));
+        captureRespFields.put(MessageFields.AUTH_ODE, new LllvarParseInfo());
         channelFactory.getMessageFactory().setParseMap(MessageTypes.CAPTURE_RESPONSE, captureRespFields);
-        
+
         LOG.info("Nets instance initialized.");
 
     }
@@ -404,12 +461,9 @@ public class Nets {
 
     public void authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
         AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId);
-        NetsResponse response =  request.send();
-        
-        if(response.getActionCode() == ActionCode.Approved ||
-           response.getActionCode() == ActionCode.Approved2 ||
-           response.getActionCode() == ActionCode.Approved3 ||
-           response.getActionCode() == ActionCode.Approved4) {
+        NetsResponse response = request.send();
+
+        if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
             TransactionData data = new TransactionData();
             data.setId(buildTransactionDataId(merchant, orderId));
             data.setActionCode(response.getActionCode());
@@ -425,12 +479,9 @@ public class Nets {
     public void capture(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
         TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
         CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
-        NetsResponse response =  request.send();
-        
-        if(response.getActionCode() == ActionCode.Approved ||
-           response.getActionCode() == ActionCode.Approved2 ||
-           response.getActionCode() == ActionCode.Approved3 ||
-           response.getActionCode() == ActionCode.Approved4) {
+        NetsResponse response = request.send();
+
+        if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
             data.setActionCode(response.getActionCode());
             data.setOde(response.getOde());
             crud.update(data);
@@ -442,12 +493,9 @@ public class Nets {
     public void reverse(Merchant merchant, Card card, String orderId) throws IOException, NetsException {
         TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
         ReverseRequest request = new ReverseRequest(merchant, card, data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
-        NetsResponse response =  request.send();
-        
-        if(response.getActionCode() == ActionCode.Approved ||
-           response.getActionCode() == ActionCode.Approved2 ||
-           response.getActionCode() == ActionCode.Approved3 ||
-           response.getActionCode() == ActionCode.Approved4) {
+        NetsResponse response = request.send();
+
+        if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
             data.setActionCode(response.getActionCode());
             data.setOde(response.getOde());
             crud.update(data);
@@ -455,7 +503,7 @@ public class Nets {
             throw new NetsException("Reverse not approved.", response.getActionCode());
         }
     }
-    
+
     private String buildTransactionDataId(Merchant merchant, String orderId) {
         return merchant.getMerchantId() + "_" + orderId;
     }
