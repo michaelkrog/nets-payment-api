@@ -5,7 +5,11 @@ import com.solab.iso8583.MessageFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.HexDump;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -13,6 +17,7 @@ import org.apache.commons.io.IOUtils;
  */
 public class SslSocketChannel extends AbstractChannel {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SslSocketChannel.class);
     private Socket socket;
 
     public SslSocketChannel(MessageFactory messageFactory, Socket socket) {
@@ -21,11 +26,16 @@ public class SslSocketChannel extends AbstractChannel {
     }
     
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
-        socket.getOutputStream().write(messageToByteArray(message));
+        byte[] requestData = messageToByteArray(message);
+        
+        socket.getOutputStream().write(requestData);
         
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         IOUtils.copy(socket.getInputStream(), out);
-        IsoMessage m = byteArrayToMessage(out.toByteArray());
+        
+        byte[] responseData = out.toByteArray();
+        
+        IsoMessage m = byteArrayToMessage(responseData);
         socket.close();
         return m;
     }

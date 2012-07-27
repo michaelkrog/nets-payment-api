@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.Arrays;
+import org.apache.commons.io.HexDump;
 
 /**
  *

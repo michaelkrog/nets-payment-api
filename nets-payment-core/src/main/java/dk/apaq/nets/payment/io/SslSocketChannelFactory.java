@@ -24,6 +24,7 @@ public class SslSocketChannelFactory implements ChannelFactory {
 
     public Channel createChannel() throws IOException {
         Socket socket = socketFactory.createSocket(host, port);
+        socket.setSoTimeout(30000);
         return new SslSocketChannel(messageFactory, socket);
     }
 

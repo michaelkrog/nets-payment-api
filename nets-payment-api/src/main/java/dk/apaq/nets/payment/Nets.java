@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import org.joda.money.Money;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
@@ -31,11 +32,16 @@ import org.slf4j.LoggerFactory;
 public class Nets {
 
     private static final Logger LOG = LoggerFactory.getLogger(Nets.class);
+    private static final int DEFAULT_MAX_ATTEMPTS_PER_REQUEST = 5;
+    private static final int DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS = 60000;
     private final ChannelFactory channelFactory;
     private final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
     private final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
     private final Crud.Editable<String, TransactionData> crud;
+    
+    private int maxRequestAttempts = DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
+    private int minWaitBetweenAttempts = DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
 
     private abstract class Request<T> {
 
@@ -126,23 +132,46 @@ public class Nets {
         protected abstract IsoMessage buildMessage();
 
         public NetsResponse send() throws IOException {
-            IsoMessage message = buildMessage();
-            Channel channel = channelFactory.createChannel();
-            message = channel.sendMessage(message);
-
-            if (message == null) {
-                throw new IOException("Message could not be parsed. Unknown message type?");
+            IsoMessage request = buildMessage();
+            IsoMessage response = null;
+            
+            int attempts = 0;
+            boolean doAttempt = true;
+            long start = System.currentTimeMillis();
+            
+            while (doAttempt) {
+                doAttempt = false;
+                Channel channel = channelFactory.createChannel();
+                attempts++;
+                try {
+                    response = channel.sendMessage(request);
+                    if (response == null) {
+                        return new NetsResponse(ActionCode.Function_Not_Supported, null);
+                    }
+                } catch (IOException ex) { 
+                    doAttempt = response == null && attempts < maxRequestAttempts;
+                    
+                    //Error occurred - if we are gonna try again then sleep a little first according to Nets requirements.
+                    if(doAttempt) {
+                        long timeTillNextRequest = minWaitBetweenAttempts - (System.currentTimeMillis() - start);
+                        try { Thread.sleep(timeTillNextRequest); } catch (InterruptedException ex2) { /* EMPTY */ }
+                    }
+                }
             }
 
-            String actionCodeString = message.getField(MessageFields.ACTION_CODE).toString();
-            String ode = message.getField(MessageFields.AUTH_ODE).toString();
+            if (response == null) {
+                throw new IOException("Unable to communicate with Nets.");
+            }
+            
+            String actionCodeString = response.getField(MessageFields.ACTION_CODE).toString();
+            String newOde = response.getField(MessageFields.AUTH_ODE).toString();
             String approvalCode = null;
 
-            if (message.hasField(MessageFields.APPROVAL_CODE)) {
-                approvalCode = message.getField(MessageFields.APPROVAL_CODE).toString();
+            if (response.hasField(MessageFields.APPROVAL_CODE)) {
+                approvalCode = response.getField(MessageFields.APPROVAL_CODE).toString();
             }
 
-            return new NetsResponse(ActionCode.fromCode(actionCodeString), ode, approvalCode);
+            return new NetsResponse(ActionCode.fromCode(actionCodeString), newOde, approvalCode);
         }
     }
 
@@ -249,7 +278,7 @@ public class Nets {
             this.fraudSuspected = fraudSuspected;
             return this;
         }
-        
+
         @Override
         protected IsoMessage buildMessage() {
             IsoMessage message = channelFactory.getMessageFactory().newMessage(MessageTypes.REVERSAL_ADVICE_REQUEST);
@@ -257,12 +286,12 @@ public class Nets {
 
             String function = FunctionCode.Reverse_FullReversal.getCode();
             String reason = MessageReason.CustomerCancellation.getCode();
-            
-            if(fraudSuspected) {
+
+            if (fraudSuspected) {
                 reason = MessageReason.SuspectedFraud.getCode();
             }
 
-            if(malfunctionSuspected) {
+            if (malfunctionSuspected) {
                 reason = MessageReason.SuspectedMalfunction.getCode();
             }
 
@@ -458,6 +487,25 @@ public class Nets {
 
         init();
     }
+
+    public void setMaxRequestAttempts(int maxRequestAttempts) {
+        maxRequestAttempts = maxRequestAttempts > 0 ? maxRequestAttempts : DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
+        this.maxRequestAttempts = maxRequestAttempts;
+    }
+
+    public int getMaxRequestAttempts() {
+        return maxRequestAttempts;
+    }
+
+    public int getMinWaitBetweenAttempts() {
+        return minWaitBetweenAttempts;
+    }
+
+    public void setMinWaitBetweenAttempts(int minWaitBetweenAttempts) {
+        this.minWaitBetweenAttempts = minWaitBetweenAttempts;
+    }
+    
+    
 
     public void authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
         AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId);

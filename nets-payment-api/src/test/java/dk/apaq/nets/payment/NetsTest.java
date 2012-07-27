@@ -5,8 +5,10 @@ import dk.apaq.crud.Crud;
 import dk.apaq.crud.core.CollectionCrud;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
+import dk.apaq.nets.payment.io.HexDumpChannelLogger;
 import dk.apaq.nets.payment.io.HttpChannelFactory;
 import dk.apaq.nets.test.MockNetsServer;
+import java.io.File;
 import java.io.IOException;
 import java.net.*;
 import java.util.HashMap;
@@ -28,6 +30,11 @@ public class NetsTest {
     
     private MockNetsServer netsServer = new MockNetsServer();
     private String serverUrl;
+    private File logDir = new File("target/log");
+    private HexDumpChannelLogger channelLogger = new HexDumpChannelLogger(logDir);
+    Nets nets = null;
+    Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
+        
     private Crud.Editable<String, TransactionData> crud = new CollectionCrud<TransactionData>(new CollectionCrud.IdResolver<TransactionData>() {
 
         public String getIdForBean(TransactionData bean) {
@@ -37,6 +44,8 @@ public class NetsTest {
     
     @Before
     public void setUp() throws Exception {
+        logDir.mkdirs();
+        
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
         authReqFields.put(2, new LlvarParseInfo());
         authReqFields.put(3, new NumericParseInfo(6));
@@ -53,6 +62,8 @@ public class NetsTest {
         netsServer.start(12345);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
+        nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
+
     }
     
     @After
@@ -66,9 +77,6 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
-        
-        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
@@ -86,9 +94,8 @@ public class NetsTest {
     public void testNetworkError() throws Exception {
         System.out.println("authorizeNetworkError");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
+        nets.setMaxRequestAttempts(1);
         
-        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
@@ -107,9 +114,6 @@ public class NetsTest {
     public void testAuthorizeInsuffecientFunds() throws Exception {
         System.out.println("authorizeInsuffecientFunds");
         
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
-        
-        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 131231.2);
         String orderId = "orderid";
@@ -126,9 +130,6 @@ public class NetsTest {
     @Test
     public void testCancel() throws Exception {
         System.out.println("cancel");
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
-        
-        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
@@ -149,9 +150,6 @@ public class NetsTest {
     @Test
     public void testCapture() throws Exception {
         System.out.println("cancel");
-        Nets nets = new Nets(new HttpChannelFactory(new URL(serverUrl)), crud);
-        
-        Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";

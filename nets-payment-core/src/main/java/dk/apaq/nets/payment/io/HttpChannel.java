@@ -2,20 +2,17 @@ package dk.apaq.nets.payment.io;
 
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
-import dk.apaq.nets.payment.PGTMHeader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.text.ParseException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -23,18 +20,26 @@ import org.apache.http.entity.ByteArrayEntity;
  */
 public class HttpChannel extends AbstractChannel {
 
+    private static final Logger LOG = LoggerFactory.getLogger(HttpChannel.class);
+    
     private final HttpClient client;
     private final URL url;
+    private final ChannelLogger channelLogger;
 
-    public HttpChannel(MessageFactory messageFactory, HttpClient client, URL url) {
+    public HttpChannel(ChannelLogger channelLogger, MessageFactory messageFactory, HttpClient client, URL url) {
         super(messageFactory);
         this.client = client;
         this.url = url;
+        this.channelLogger = channelLogger;
     }
 
     
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
         byte[] msgData = messageToByteArray(message);
+       
+        if(channelLogger != null) {
+            channelLogger.onMessageSent(msgData);
+        }
         
         HttpHost host = new HttpHost(url.getHost(), url.getPort(), url.getProtocol());
         HttpPost postMethod = new HttpPost(url.getPath());
@@ -50,7 +55,13 @@ public class HttpChannel extends AbstractChannel {
         IOUtils.copy(response.getEntity().getContent(), buf);
         buf.flush();
         
-        return byteArrayToMessage(buf.toByteArray());
+        byte[] responseData = buf.toByteArray();
+        
+        if(channelLogger != null) {
+            channelLogger.onMessageRecieved(responseData);
+        }
+        
+        return byteArrayToMessage(responseData);
     }
     
 }
