@@ -3,11 +3,10 @@ package dk.apaq.nets.payment;
 import com.solab.iso8583.parse.*;
 import dk.apaq.crud.Crud;
 import dk.apaq.crud.core.CollectionCrud;
-import dk.apaq.nets.payment.io.Channel;
-import dk.apaq.nets.payment.io.ChannelFactory;
-import dk.apaq.nets.payment.io.HexDumpChannelLogger;
-import dk.apaq.nets.payment.io.HttpChannelFactory;
-import dk.apaq.nets.test.MockNetsServer;
+import dk.apaq.nets.payment.io.*;
+import dk.apaq.nets.test.AbstractMockNetsServer;
+import dk.apaq.nets.test.MockNetsHttpServer;
+import dk.apaq.nets.test.MockNetsSocketServer;
 import java.io.File;
 import java.io.IOException;
 import java.net.*;
@@ -28,7 +27,12 @@ public class NetsTest {
     private static final String CARDNO_VALID_VISA_2 = "45711234123412341235";
     private static final String CARDNO_INVALID = "00001234123412341234";
     
-    private MockNetsServer netsServer = new MockNetsServer();
+    static {
+        System.setProperty("javax.net.ssl.trustStore", "src/test/resources/keystore");
+    }
+    
+    private AbstractMockNetsServer netsServer = new MockNetsSocketServer();
+    //private AbstractMockNetsServer netsServer = new MockNetsHttpServer();
     private String serverUrl;
     private File logDir = new File("target/log");
     private HexDumpChannelLogger channelLogger = new HexDumpChannelLogger(logDir);
@@ -62,7 +66,8 @@ public class NetsTest {
         netsServer.start(12345);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
-        nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
+        nets = new Nets(new SslSocketChannelFactory("nkm17v85", 12345, channelLogger), crud);
+        //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
 
     }
     

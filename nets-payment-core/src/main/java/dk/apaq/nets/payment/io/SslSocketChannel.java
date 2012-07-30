@@ -4,6 +4,8 @@ import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.HexDump;
@@ -27,13 +29,16 @@ public class SslSocketChannel extends AbstractChannel {
     
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
         byte[] requestData = messageToByteArray(message);
+        InputStream in = socket.getInputStream();
+        OutputStream out = socket.getOutputStream();
         
-        socket.getOutputStream().write(requestData);
+        out.write(requestData);
+        out.flush();
         
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        IOUtils.copy(socket.getInputStream(), out);
+        ByteArrayOutputStream bout = new ByteArrayOutputStream();
+        IOUtils.copy(in, bout);
         
-        byte[] responseData = out.toByteArray();
+        byte[] responseData = bout.toByteArray();
         
         IsoMessage m = byteArrayToMessage(responseData);
         socket.close();

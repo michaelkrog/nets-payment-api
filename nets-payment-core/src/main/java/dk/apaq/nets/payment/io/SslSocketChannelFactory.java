@@ -10,7 +10,7 @@ import javax.net.ssl.SSLSocketFactory;
  *
  * @author michael
  */
-public class SslSocketChannelFactory implements ChannelFactory {
+public class SslSocketChannelFactory extends AbstractChannelFactory {
     
     private static final MessageFactory messageFactory = new MessageFactory();
     private String host;
@@ -18,6 +18,11 @@ public class SslSocketChannelFactory implements ChannelFactory {
     private SocketFactory socketFactory = SSLSocketFactory.getDefault();
 
     public SslSocketChannelFactory(String host, int port) {
+        this(host, port, null);
+    }
+    
+    public SslSocketChannelFactory(String host, int port, ChannelLogger channelLogger) {
+        super(channelLogger);
         this.host = host;
         this.port = port;
     }

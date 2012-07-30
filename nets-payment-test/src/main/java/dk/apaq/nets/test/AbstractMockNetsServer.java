@@ -1,44 +1,30 @@
 package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
-import com.solab.iso8583.IsoType;
-import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
-import com.solab.iso8583.parse.AlphaParseInfo;
-import com.solab.iso8583.parse.FieldParseInfo;
-import com.solab.iso8583.parse.LllbinParseInfo;
-import com.solab.iso8583.parse.LllvarParseInfo;
-import com.solab.iso8583.parse.LlvarParseInfo;
-import com.solab.iso8583.parse.NumericParseInfo;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
+import com.solab.iso8583.parse.*;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
 import dk.apaq.nets.payment.PGTMHeader;
 import dk.apaq.nets.payment.PsipHeader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Inet4Address;
-import java.net.InetSocketAddress;
+import java.io.*;
 import java.net.UnknownHostException;
-import java.util.*;
+import java.text.ParseException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.IOUtils;
 
 /**
  *
  * @author krog
  */
-public class MockNetsServer implements HttpHandler {
-    
-    private Bank bank = new Bank();
-    private HttpServer httpServer = null;
-    private MessageFactory messageFactory = new MessageFactory();
+public abstract class AbstractMockNetsServer {
+    protected Bank bank = new Bank();
+    protected MessageFactory messageFactory = new MessageFactory();
     private boolean nextRequestFails = false;
 
-    public MockNetsServer() {
+    public AbstractMockNetsServer() {
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
         authReqFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
         authReqFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
@@ -98,17 +84,43 @@ public class MockNetsServer implements HttpHandler {
         
         messageFactory.setParseMap(MessageTypes.CAPTURE_REQUEST, captureReqFields);  
     }
-    
-    
-    
-    public void handle(HttpExchange he) throws IOException {
-        byte[] messageBuffer = readMessageBufffer(he.getRequestBody());
-        byte[] headerData = Arrays.copyOfRange(messageBuffer, 0, 32);
-        byte[] messageData = Arrays.copyOfRange(messageBuffer, 32, messageBuffer.length);
+
+    public Bank getBank() {
+        return bank;
+    }
+
+    public abstract void start(int port) throws UnknownHostException, IOException;
+    public abstract void stop();
         
-        PGTMHeader header = PGTMHeader.fromByteArray(headerData);
+    protected byte[] bytesFromInputStream(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        IOUtils.copy(in, out);
+        return out.toByteArray();
+    }
+    
+    protected void bytesToOutputStream(byte[] data, OutputStream out) throws IOException {
+        IOUtils.copy(new ByteArrayInputStream(data), out);
+        out.flush();
+    }
+    
+    protected byte[] readData(InputStream in, int numberOfBytes) throws IOException {
+        byte[] buf = new byte[numberOfBytes];
+        int offset = 0;
         
-        try {
+        while(offset < numberOfBytes) {
+            offset += in.read(buf, offset, buf.length - offset);
+        }
+        return buf;
+    }
+    
+    protected PGTMHeader readHeader(InputStream in) throws IOException {
+        return PGTMHeader.fromByteArray(readData(in, 32));
+    }
+    
+    protected byte[] doHandle(PGTMHeader header, byte[] messageData) throws IOException, ParseException {
+        //byte[] headerData = Arrays.copyOfRange(messageBuffer, 0, 32);
+        //byte[] messageData = Arrays.copyOfRange(messageBuffer, 32, messageBuffer.length);
+        
             if(!"0000".equals(header.getNetworkResponseCode())) {
                 throw new IOException("Network code in request is invalid.");
             }
@@ -143,8 +155,7 @@ public class MockNetsServer implements HttpHandler {
                     messageHandler = new ReversalMessageHandler();
                     break;
                 default:
-                    he.sendResponseHeaders(500, -1);
-                    return;
+                    throw new IOException("Message type not recognized.");
             }
             
             response = messageHandler.handleMessage(bank, message);
@@ -153,54 +164,17 @@ public class MockNetsServer implements HttpHandler {
             response.write(buf, 0);
             
             byte[] packet = buf.toByteArray();
-            header = new PGTMHeader(buf.size(), "0000");
-            he.sendResponseHeaders(200, header.getLength());
+            header = new PGTMHeader(packet.length, "0000");
             
             buf.reset();
             buf.write(header.toByteArray());
             buf.write(packet);
             
-            IOUtils.copy(new ByteArrayInputStream(buf.toByteArray()), he.getResponseBody());
-            he.getResponseBody().flush();
-        } catch (Exception ex) {
-            PGTMHeader failHeader = new PGTMHeader(0, "0001");
-            he.sendResponseHeaders(200, failHeader.getLength());
-            IOUtils.copy(new ByteArrayInputStream(failHeader.toByteArray()), he.getResponseBody());
-            he.getResponseBody().flush();
-        } finally {
-            he.getResponseBody().close();
-        }
-    }
-    
-    private byte[] readMessageBufffer(InputStream in) throws IOException {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        IOUtils.copy(in, out);
-        return out.toByteArray();
-    }
-
-    public Bank getBank() {
-        return bank;
-    }
-    
-    public void start(int port) throws UnknownHostException, IOException {
-        InetSocketAddress adr = new InetSocketAddress(Inet4Address.getLocalHost(), port);
-        httpServer = HttpServer.create(adr, 0);
-        httpServer.createContext("/", this);
-        httpServer.start();
-    }
-    
-    public void stop() {
-        if(httpServer!=null) {
-            httpServer.stop(0);
-        }
-    }
-    
-    public boolean isStarted() {
-        return false;
+            return buf.toByteArray();
     }
 
     public void setNextRequestFails(boolean nextRequestFails) {
         this.nextRequestFails = nextRequestFails;
     }
-
+    
 }
