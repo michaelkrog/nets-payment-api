@@ -17,6 +17,10 @@ Card card = new Card("<card>", 12, 12, "123");
 Money money = Money.of(CurrencyUnit.USD, 199.99);
 String orderId = "<orderid>";
 
-nets.authorize(merchant, card, money, orderId);
-nets.capture(merchant, card, money, orderId);
+try{
+    nets.authorize(merchant, card, money, orderId);
+    nets.capture(merchant, card, money, orderId);
+} catch(NetsException ex) {
+    LOG.error("Not approved. [action={};merchantAction={}]", ex.getAction(), ex.getAction().getMerchantAction());
+}
 ```
