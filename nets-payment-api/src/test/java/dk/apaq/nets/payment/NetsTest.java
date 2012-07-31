@@ -151,7 +151,7 @@ public class NetsTest {
         nets.authorize(merchant, card, money, orderId);
         
         //Now cancel
-        nets.reverse(merchant, card, orderId);
+        nets.reverse(merchant, orderId);
         
         TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
@@ -173,7 +173,7 @@ public class NetsTest {
         nets.authorize(merchant, card, money, orderId);
         
         //Now capture
-        nets.capture(merchant, card, money, orderId, false);
+        nets.capture(merchant, money, orderId, false);
         
         TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
@@ -195,10 +195,10 @@ public class NetsTest {
         nets.authorize(merchant, card, money, orderId);
         
         //Now capture
-        nets.capture(merchant, card, money, orderId, false);
+        nets.capture(merchant, money, orderId, false);
         
         //Now refund
-        nets.capture(merchant, card, money, orderId, true);
+        nets.capture(merchant, money, orderId, true);
         
         TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
@@ -226,7 +226,7 @@ public class NetsTest {
             nets.authorize(merchant, card, money, currentId);
 
             //Now capture
-            nets.capture(merchant, card, money, currentId, false);
+            nets.capture(merchant, money, currentId, false);
         }
         long end = System.currentTimeMillis();
         long time = end-start;

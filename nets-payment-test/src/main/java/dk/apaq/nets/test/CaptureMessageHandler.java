@@ -40,10 +40,7 @@ public class CaptureMessageHandler  implements MessageHandler {
         } catch (ParseException ex) {
             throw new IOException("Unable to handlemessage.", ex);
         }
-        
-        
     }
-    
     
     private void doCaptureAndResponse() {
         

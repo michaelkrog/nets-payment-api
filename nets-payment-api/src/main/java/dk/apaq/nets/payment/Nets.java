@@ -535,15 +535,16 @@ public class Nets {
             data.setApprovedAmount(money);
             data.setOde(response.getOde());
             data.setApprovalCode(response.getApprovalCode());
+            data.setCard(card);
             crud.create(data);
         } else {
             throw new NetsException("Authorize not approved.", response.getActionCode());
         }
     }
 
-    public void capture(Merchant merchant, Card card, Money money, String orderId, boolean refund) throws IOException, NetsException {
+    public void capture(Merchant merchant, Money money, String orderId, boolean refund) throws IOException, NetsException {
         TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
-        CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
+        CaptureRequest request = new CaptureRequest(merchant, data.getCard(), money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
         request.setRefund(refund);
         NetsResponse response = request.send();
 
@@ -556,9 +557,9 @@ public class Nets {
         }
     }
 
-    public void reverse(Merchant merchant, Card card, String orderId) throws IOException, NetsException {
+    public void reverse(Merchant merchant, String orderId) throws IOException, NetsException {
         TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
-        ReverseRequest request = new ReverseRequest(merchant, card, data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
+        ReverseRequest request = new ReverseRequest(merchant, data.getCard(), data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
