@@ -48,7 +48,7 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
                 while (running) {
                     try {
                         socket = serverSocket.accept();
-                        LOG.info("Socket created [client={}].", socket.getRemoteSocketAddress());
+                        LOG.debug("Socket created [client={}].", socket.getRemoteSocketAddress());
                         
                         InputStream in = socket.getInputStream();
                         OutputStream out = socket.getOutputStream();
