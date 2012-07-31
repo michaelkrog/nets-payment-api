@@ -35,9 +35,11 @@ public class HttpChannel extends AbstractChannel {
 
     
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
+        LOG.debug("Sendding message via HttpChannel [message={}]", message);
         byte[] msgData = messageToByteArray(message);
        
         if(channelLogger != null) {
+            LOG.debug("Logging data to send.");
             channelLogger.onMessageSent(msgData);
         }
         
@@ -58,6 +60,7 @@ public class HttpChannel extends AbstractChannel {
         byte[] responseData = buf.toByteArray();
         
         if(channelLogger != null) {
+            LOG.debug("Logging data recieved.");
             channelLogger.onMessageRecieved(responseData);
         }
         
