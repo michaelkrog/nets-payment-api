@@ -493,7 +493,7 @@ public class Nets {
 
     }
 
-    public Nets(ChannelFactory channelFactory, Crud.Editable<String, TransactionData> persistence) throws MalformedURLException {
+    public Nets(ChannelFactory channelFactory, Crud.Editable<String, TransactionData> persistence) {
         this.channelFactory = channelFactory;
         this.crud = persistence;
 
