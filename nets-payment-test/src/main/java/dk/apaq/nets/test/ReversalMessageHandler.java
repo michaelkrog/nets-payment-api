@@ -48,7 +48,10 @@ public class ReversalMessageHandler implements MessageHandler {
         String newOde = null;
         
         Bank.Transaction t = bank.getTransaction(ode);
-        if(t == null || (t.isAuthorized() && t.getAmount() >= amount)) {
+        if(t == null || !t.getOrderId().equals(acquirerReference)) {
+            //if transaction not found or orderid does not match
+            actionCode = ActionCode.No_Card_Record;
+        } else if(t.isAuthorized() && t.getAmount() >= amount) {
             newOde = bank.cancel(ode);
             actionCode = newOde == null ? ActionCode.No_Card_Record : ActionCode.Approved;
         } else {

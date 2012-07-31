@@ -45,17 +45,23 @@ public class Bank {
         private CardEntry card;
         private long amount;
         private long capturedAmount;
+        private String orderId;
         private String id = UUID.randomUUID().toString();
         private String ode;
 
-        private Transaction(CardEntry card, long amount) {
+        private Transaction(CardEntry card, long amount, String orderId) {
             this.card = card;
             this.amount = amount;
+            this.orderId = orderId;
             rebuildOde();
         }
 
         public long getAmount() {
             return amount;
+        }
+
+        public String getOrderId() {
+            return orderId;
         }
         
         public void markAuthorized() {
@@ -137,10 +143,10 @@ public class Bank {
         return 0;
     }
     
-    public String authorize(Card card, long amount) {
+    public String authorize(Card card, long amount, String orderId) {
         for(CardEntry ce : cards) {
             if(ce.getCard().equals(card) && ce.amount >= amount) {
-                Transaction t = new Transaction(ce, amount);
+                Transaction t = new Transaction(ce, amount, orderId);
                 t.markAuthorized();
                 transactions.add(t);
                 return t.getOde();

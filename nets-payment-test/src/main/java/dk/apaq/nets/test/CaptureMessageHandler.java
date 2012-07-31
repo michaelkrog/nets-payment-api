@@ -52,8 +52,9 @@ public class CaptureMessageHandler  implements MessageHandler {
         
         Bank.Transaction t = bank.getTransaction(ode);
         
-        if(t==null) {
-            actionCode = ActionCode.Invalid_Card_Number;
+        if(t == null || !t.getOrderId().equals(acquirerReference)) {
+            //if transaction not found or orderid does not match
+            actionCode = ActionCode.No_Card_Record;
         } else {
             if(ProcessingCode.GoodsAndServiceCredit.getCode().equals(processCode)) {
                 newOde = bank.refund(ode);

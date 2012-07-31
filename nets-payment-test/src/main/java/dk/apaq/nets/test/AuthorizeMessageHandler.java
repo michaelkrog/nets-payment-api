@@ -59,7 +59,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         if(functionCode != FunctionCode.Authorize_Original_Accurate_Amount) {
             actionCode = ActionCode.Function_Not_Supported;
         } else {
-            ode = bank.authorize(card, amount);
+            ode = bank.authorize(card, amount, acquirerReference);
             actionCode = ode == null ? ActionCode.Insufficient_Funds : ActionCode.Approved;
         }
         
