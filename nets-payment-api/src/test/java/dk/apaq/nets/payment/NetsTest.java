@@ -5,6 +5,7 @@ import dk.apaq.crud.Crud;
 import dk.apaq.crud.core.CollectionCrud;
 import dk.apaq.nets.payment.io.*;
 import dk.apaq.nets.test.AbstractMockNetsServer;
+import dk.apaq.nets.test.Bank;
 import dk.apaq.nets.test.MockNetsHttpServer;
 import dk.apaq.nets.test.MockNetsSocketServer;
 import java.io.File;
@@ -63,6 +64,7 @@ public class NetsTest {
                 
         InetAddress address = Inet4Address.getLocalHost();
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_1, 12, 12, "123"), 100000);
+        netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_2, 12, 12, "123"), 1000000000000000000L);
         netsServer.start(12345);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
@@ -92,7 +94,11 @@ public class NetsTest {
         assertNotNull(data.getOde());
         assertEquals(255, data.getOde().length());
         assertTrue(data.getOde().startsWith("oDe123"));
-
+        
+        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        assertNotNull(t);
+        assertTrue(t.isAuthorized());
+        assertEquals(money.getAmountMinorInt(), t.getAmount());
     }
     
     @Test
@@ -150,11 +156,15 @@ public class NetsTest {
         TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
+        
+        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        assertNotNull(t);
+        assertTrue(t.isCancelled());
     }
     
     @Test
     public void testCapture() throws Exception {
-        System.out.println("cancel");
+        System.out.println("capture");
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
@@ -163,33 +173,65 @@ public class NetsTest {
         nets.authorize(merchant, card, money, orderId);
         
         //Now capture
-        nets.capture(merchant, card, money, orderId);
+        nets.capture(merchant, card, money, orderId, false);
         
         TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
+                
+        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        assertNotNull(t);
+        assertTrue(t.isCaptured());
     }
     
-    /*
-    
     @Test
-    public void testRefund() {
+    public void testRefund() throws Exception {
         System.out.println("refund");
-        Nets instance = null;
-        instance.refund();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Money money = Money.of(CurrencyUnit.USD, 12.2);
+        String orderId = "orderid";
+        
+        //Need to authorize first
+        nets.authorize(merchant, card, money, orderId);
+        
+        //Now capture
+        nets.capture(merchant, card, money, orderId, false);
+        
+        //Now refund
+        nets.capture(merchant, card, money, orderId, true);
+        
+        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
+        assertEquals(ActionCode.Approved , data.getActionCode());
+        assertNotNull(data.getOde());
+        
+        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        assertNotNull(t);
+        assertTrue(t.isRefunded());
     }
-
-    @Test
-    public void testCapture() {
-        System.out.println("capture");
-        Nets instance = null;
-        instance.capture();
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
     
-    */
+    @Test
+    public void testPerformance() throws Exception {
+        System.out.println("performance");
+        Card card = new Card(CARDNO_VALID_VISA_2, 12, 12, "123");
+        Money money = Money.of(CurrencyUnit.USD, 12.2);
+        String orderId = "orderid";
+
+        //Bootstrap
+        nets.authorize(merchant, card, money, orderId);
+
+        long start = System.currentTimeMillis();
+        for(int i=0;i<100;i++) {
+            String currentId = orderId + "_" + i;
+            //Need to authorize first
+            nets.authorize(merchant, card, money, currentId);
+
+            //Now capture
+            nets.capture(merchant, card, money, currentId, false);
+        }
+        long end = System.currentTimeMillis();
+        long time = end-start;
+        
+        System.out.println("Done in " + time + "ms.");
+        assertTrue(time<1000);
+    }
 }

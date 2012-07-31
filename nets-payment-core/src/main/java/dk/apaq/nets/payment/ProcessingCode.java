@@ -6,7 +6,8 @@ package dk.apaq.nets.payment;
  */
 public enum ProcessingCode {
 
-    GoodsAndServices("000000"), QuasiCash("110000");
+    GoodsAndServices("000000"), QuasiCash("110000"), GoodsAndServiceCredit("200000");
+    
     
     private String code;
 

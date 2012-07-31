@@ -4,6 +4,7 @@ import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import dk.apaq.nets.payment.ActionCode;
 import dk.apaq.nets.payment.Card;
+import dk.apaq.nets.payment.FunctionCode;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
 import java.io.IOException;
@@ -24,7 +25,8 @@ public class AuthorizeMessageHandler  implements MessageHandler {
     private static final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private static final NumberFormat nf = NumberFormat.getIntegerInstance();
     private Card card;
-    private String processCode, pointOfService, functionCode, reasonCode,
+    private FunctionCode functionCode;
+    private String processCode, pointOfService, reasonCode,
             cardAcceptorBusinessCode, acquirerReference, cardAcceptorTerminalId,
             cardAcceptorIdCode, cardAcceptorLocation, currencyCode;
     
@@ -51,11 +53,17 @@ public class AuthorizeMessageHandler  implements MessageHandler {
     
     
     private void doAuthorizeAndResponse() {
-        String ode = bank.authorize(card, amount);
+        ActionCode actionCode = null;
+        String ode = null;
         
-        ActionCode actionCode = ode == null ? ActionCode.Insufficient_Funds : ActionCode.Approved;
+        if(functionCode != FunctionCode.Authorize_Original_Accurate_Amount) {
+            actionCode = ActionCode.Function_Not_Supported;
+        } else {
+            ode = bank.authorize(card, amount);
+            actionCode = ode == null ? ActionCode.Insufficient_Funds : ActionCode.Approved;
+        }
+        
         if(ode==null) ode = "";
-        
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.AUTHORIZATION_RESPONSE);
@@ -81,7 +89,7 @@ public class AuthorizeMessageHandler  implements MessageHandler {
         localTime = df.parse(request.getField(MessageFields.LOCAL_TIME).toString());
         String expire = request.getField(MessageFields.EXPIRATION).toString(); 
         pointOfService = request.getField(MessageFields.POINT_OF_SERVICE).toString(); 
-        functionCode = request.getField(MessageFields.FUNCTION_CODE).toString(); 
+        functionCode = FunctionCode.fromCode(request.getField(MessageFields.FUNCTION_CODE).toString()); 
         reasonCode = request.getField(MessageFields.MESSAGE_REASON_CODE).toString(); 
         cardAcceptorBusinessCode = request.getField(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE).toString(); 
         acquirerReference = request.getField(MessageFields.ACQUIRER_REFERENCE).toString(); 

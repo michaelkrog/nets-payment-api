@@ -47,26 +47,26 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
                 while (running) {
                     try {
                         socket = serverSocket.accept();
-                        LOG.info("Socket created [client={}].", socket.getRemoteSocketAddress());
+                        LOG.debug("Socket created [client={}].", socket.getRemoteSocketAddress());
                         
                         InputStream in = socket.getInputStream();
                         OutputStream out = socket.getOutputStream();
                         
-                        LOG.info("Reading header from socket");
+                        LOG.debug("Reading header from socket");
                         PGTMHeader header = readHeader(in);
-                        LOG.info("Header read from socket [length={}]", header.getLength());
+                        LOG.debug("Header read from socket [length={}]", header.getLength());
                         
-                        LOG.info("Reading data from socket.");
+                        LOG.debug("Reading data from socket.");
                         byte[] data = readData(in, header.getLength() - 32);
-                        LOG.info("Data read.");
+                        LOG.debug("Data read.");
                         
-                        LOG.info("Handling data.");
+                        LOG.debug("Handling data.");
                         data = doHandle(header, data);
                         
-                        LOG.info("Writing data to socket.");
+                        LOG.debug("Writing data to socket.");
                         bytesToOutputStream(data, out);
                         
-                        LOG.info("Data written.");
+                        LOG.debug("Data written.");
                         
                         in.close();
                         out.close();
@@ -85,7 +85,7 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
                     } finally {
                         try {
                             if (socket != null) {
-                                LOG.info("Closing socket.");
+                                LOG.debug("Closing socket.");
                                 socket.close();
                             }
                         } catch (IOException ex) {

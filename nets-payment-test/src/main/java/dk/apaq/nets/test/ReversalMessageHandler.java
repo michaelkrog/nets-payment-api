@@ -26,7 +26,7 @@ public class ReversalMessageHandler implements MessageHandler {
             cardAcceptorIdCode, cardAcceptorLocation, currencyCode, ode;
     private IsoMessage request;
     private IsoMessage response;
-    private int amount;
+    private long amount;
     private Date localTime;
     private Bank bank;
 
@@ -44,11 +44,18 @@ public class ReversalMessageHandler implements MessageHandler {
     }
 
     private void doCancelAndResponse() {
-        String result = bank.cancel(ode);
+        ActionCode actionCode = null;
+        String newOde = null;
         
-        ActionCode actionCode = result == null ? ActionCode.No_Card_Record : ActionCode.Approved;
-        ode = "";
+        Bank.Transaction t = bank.getTransaction(ode);
+        if(t == null || (t.isAuthorized() && t.getAmount() >= amount)) {
+            newOde = bank.cancel(ode);
+            actionCode = newOde == null ? ActionCode.No_Card_Record : ActionCode.Approved;
+        } else {
+            actionCode = ActionCode.Invalid_Amount;
+        }
         
+        if(newOde==null) newOde = "";
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.REVERSAL_ADVICE_RESPONSE);
@@ -63,7 +70,7 @@ public class ReversalMessageHandler implements MessageHandler {
                 MessageFields.AUTHORIZATION_LIFE_CYCLE);
 
         response.setValue(MessageFields.ACTION_CODE, actionCode.getCode(), IsoType.NUMERIC, 3);
-        response.setValue(MessageFields.AUTH_ODE, ode, IsoType.LLLVAR, 255);
+        response.setValue(MessageFields.AUTH_ODE, newOde, IsoType.LLLVAR, 255);
 
     }
 

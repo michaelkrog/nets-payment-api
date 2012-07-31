@@ -37,7 +37,7 @@ public class Bank {
         
     }
     
-    private class Transaction {
+    public class Transaction {
         private boolean authorized;
         private boolean captured;
         private boolean cancelled;
@@ -48,10 +48,14 @@ public class Bank {
         private String id = UUID.randomUUID().toString();
         private String ode;
 
-        public Transaction(CardEntry card, long amount) {
+        private Transaction(CardEntry card, long amount) {
             this.card = card;
             this.amount = amount;
             rebuildOde();
+        }
+
+        public long getAmount() {
+            return amount;
         }
         
         public void markAuthorized() {
@@ -170,6 +174,15 @@ public class Bank {
             if(t.getOde().equals(ode)) {
                 t.markRefunded();
                 return t.getOde();
+            }
+        }
+        return null;
+    }
+    
+    public Transaction getTransaction(String ode) {
+        for(Transaction t : transactions) {
+            if(t.getOde().equals(ode)) {
+                return t;
             }
         }
         return null;

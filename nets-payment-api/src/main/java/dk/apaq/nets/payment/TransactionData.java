@@ -13,6 +13,7 @@ public class TransactionData {
     private String approvalCode;
     private Money approvedAmount;
     private ActionCode actionCode;
+    private Card card;
 
     public String getId() {
         return _id;
@@ -52,6 +53,14 @@ public class TransactionData {
 
     public void setOde(String ode) {
         this.ode = ode;
+    }
+
+    public Card getCard() {
+        return card;
+    }
+
+    public void setCard(Card card) {
+        this.card = card;
     }
     
     

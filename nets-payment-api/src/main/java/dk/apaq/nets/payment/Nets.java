@@ -317,7 +317,7 @@ public class Nets {
 
     public class CaptureRequest extends Request<CaptureRequest> {
 
-        private boolean recurring, amountDiffers, gambling;
+        private boolean recurring, amountDiffers, gambling, refund;
         private ActionCode actionCode;
         private String approvalCode;
 
@@ -334,6 +334,15 @@ public class Nets {
 
         public boolean isRecurring() {
             return recurring;
+        }
+
+        public boolean isRefund() {
+            return refund;
+        }
+
+        public CaptureRequest setRefund(boolean refund) {
+            this.refund = refund;
+            return this;
         }
 
         public CaptureRequest setAmountDiffers(boolean amountDiffers) {
@@ -368,10 +377,18 @@ public class Nets {
             message.setIsoHeader(PsipHeader.OK.toString());
 
             String expire = expireFormat.format(card.getExpireYear()) + expireFormat.format(card.getExpireMonth());
-            String processingCode = gambling ? ProcessingCode.QuasiCash.getCode() : ProcessingCode.GoodsAndServices.getCode();
             String pointOfService = recurring ? PointOfService.InternetMerchantRecurring.getCode() : PointOfService.InternetMerchant.getCode();
-            String function = amountDiffers ? FunctionCode.Capture_Amount_Differs.getCode() : FunctionCode.Capture_Amount_Accurate.getCode();
+            String processingCode = null;
+            String function = null;
 
+            if(refund) {
+                processingCode = ProcessingCode.GoodsAndServiceCredit.getCode();
+                function = FunctionCode.Capture_Original_Transaction.getCode();
+            } else {
+                processingCode = gambling ? ProcessingCode.QuasiCash.getCode() : ProcessingCode.GoodsAndServices.getCode();
+                function = amountDiffers ? FunctionCode.Capture_Amount_Differs.getCode() : FunctionCode.Capture_Amount_Accurate.getCode();
+            }
+            
             String address = buildAddressField();
 
             message.setField(2, new IsoValue<String>(IsoType.LLVAR, card.getCardNumber()));
@@ -524,9 +541,10 @@ public class Nets {
         }
     }
 
-    public void capture(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
+    public void capture(Merchant merchant, Card card, Money money, String orderId, boolean refund) throws IOException, NetsException {
         TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
         CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
+        request.setRefund(refund);
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {

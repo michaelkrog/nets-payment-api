@@ -2,9 +2,7 @@ package dk.apaq.nets.test;
 
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
-import dk.apaq.nets.payment.Card;
-import dk.apaq.nets.payment.MessageFields;
-import dk.apaq.nets.payment.MessageTypes;
+import dk.apaq.nets.payment.*;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
@@ -49,15 +47,24 @@ public class CaptureMessageHandler  implements MessageHandler {
     
     private void doCaptureAndResponse() {
         
-        String result;
+        String newOde = null;
+        ActionCode actionCode = null;
         
-        if("".equals(processCode)) {
-            result = bank.refund(ode);
+        Bank.Transaction t = bank.getTransaction(ode);
+        
+        if(t==null) {
+            actionCode = ActionCode.Invalid_Card_Number;
         } else {
-            result = bank.capture(ode, amount);
+            if(ProcessingCode.GoodsAndServiceCredit.getCode().equals(processCode)) {
+                newOde = bank.refund(ode);
+            } else {
+                newOde = bank.capture(ode, amount);
+            }
+            
+            actionCode = newOde == null ? ActionCode.Invalid_Amount : ActionCode.Approved;
         }
         
-        //TODO if result is null
+        if(newOde==null) newOde = "";
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.CAPTURE_RESPONSE);
@@ -71,8 +78,8 @@ public class CaptureMessageHandler  implements MessageHandler {
                                         MessageFields.ADDITIONAL_DATA_NATIONAL,
                                         MessageFields.CURRENCY_CODE);
         
-        response.setValue(MessageFields.ACTION_CODE, "000", IsoType.NUMERIC, 3);
-        response.setValue(MessageFields.AUTH_ODE, result, IsoType.LLLVAR, 255);
+        response.setValue(MessageFields.ACTION_CODE, actionCode.getCode(), IsoType.NUMERIC, 3);
+        response.setValue(MessageFields.AUTH_ODE, newOde, IsoType.LLLVAR, 255);
         
     }
     
