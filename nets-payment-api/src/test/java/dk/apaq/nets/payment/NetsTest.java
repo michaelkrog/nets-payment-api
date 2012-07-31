@@ -65,10 +65,11 @@ public class NetsTest {
         InetAddress address = Inet4Address.getLocalHost();
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_1, 12, 12, "123"), 100000);
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_2, 12, 12, "123"), 1000000000000000000L);
-        netsServer.start(12345);
+        netsServer.start(4444);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
-        nets = new Nets(new SslSocketChannelFactory("nkm17v85", 12345, channelLogger), crud);
+        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), crud);
+        nets.setMinWaitBetweenAttempts(500);
         //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
 
     }

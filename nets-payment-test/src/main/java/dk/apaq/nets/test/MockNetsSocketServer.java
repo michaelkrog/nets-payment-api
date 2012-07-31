@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.*;
+import java.text.ParseException;
 import java.util.logging.Level;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
@@ -35,9 +36,9 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
 
     @Override
     public void start(int port) throws UnknownHostException, IOException {
-        InetSocketAddress adr = new InetSocketAddress(Inet4Address.getLocalHost(), port);
-        
-        serverSocket = serverSocketFactory.createServerSocket(port,0,adr.getAddress());
+        InetAddress address = Inet4Address.getLocalHost();
+        serverSocket = serverSocketFactory.createServerSocket(port,0,address);
+        LOG.info("ServerSocket created [address={},port={}].", address, port);
         running = true;
         Thread t = new Thread() {
 
@@ -47,7 +48,7 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
                 while (running) {
                     try {
                         socket = serverSocket.accept();
-                        LOG.debug("Socket created [client={}].", socket.getRemoteSocketAddress());
+                        LOG.info("Socket created [client={}].", socket.getRemoteSocketAddress());
                         
                         InputStream in = socket.getInputStream();
                         OutputStream out = socket.getOutputStream();
@@ -55,6 +56,10 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
                         LOG.debug("Reading header from socket");
                         PGTMHeader header = readHeader(in);
                         LOG.debug("Header read from socket [length={}]", header.getLength());
+                        
+                        if(header.getLength()<32) {
+                            throw new ParseException("Lnegth of data specified by header is not enough. [length="+header.getLength()+"]", 0);
+                        }
                         
                         LOG.debug("Reading data from socket.");
                         byte[] data = readData(in, header.getLength() - 32);
@@ -107,7 +112,9 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
     public void stop() {
         running = false;
         try {
-            serverSocket.close();
+            if(serverSocket!=null) {
+                serverSocket.close();
+            }
         } catch (IOException ex) {
             LOG.error("Unable to stop server.", ex);
         }

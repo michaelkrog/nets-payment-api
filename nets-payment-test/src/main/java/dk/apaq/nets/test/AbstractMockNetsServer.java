@@ -104,6 +104,10 @@ public abstract class AbstractMockNetsServer {
     }
     
     protected byte[] readData(InputStream in, int numberOfBytes) throws IOException {
+        if(numberOfBytes<=0) {
+            return new byte[0];
+        }
+        
         byte[] buf = new byte[numberOfBytes];
         int offset = 0;
         
