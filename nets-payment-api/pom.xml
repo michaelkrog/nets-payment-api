@@ -54,9 +54,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>crud4j-core</artifactId>
-            <version>1.2.1</version>
+            <groupId>dk.apaq.framework</groupId>
+            <artifactId>repository-api</artifactId>
+            <version>1.0.4</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

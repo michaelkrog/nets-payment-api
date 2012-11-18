@@ -1,12 +1,11 @@
 package dk.apaq.nets.payment;
 
 import com.solab.iso8583.parse.*;
-import dk.apaq.crud.Crud;
-import dk.apaq.crud.core.CollectionCrud;
+import dk.apaq.framework.repository.CollectionRepository;
+import dk.apaq.framework.repository.Repository;
 import dk.apaq.nets.payment.io.*;
 import dk.apaq.nets.test.AbstractMockNetsServer;
 import dk.apaq.nets.test.Bank;
-import dk.apaq.nets.test.MockNetsHttpServer;
 import dk.apaq.nets.test.MockNetsSocketServer;
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +39,7 @@ public class NetsTest {
     Nets nets = null;
     Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         
-    private Crud.Editable<String, TransactionData> crud = new CollectionCrud<TransactionData>(new CollectionCrud.IdResolver<TransactionData>() {
+    private Repository<TransactionData, String> repository = new CollectionRepository<TransactionData>(new CollectionRepository.IdResolver<TransactionData>() {
 
         public String getIdForBean(TransactionData bean) {
             return bean.getId();
@@ -68,7 +67,7 @@ public class NetsTest {
         netsServer.start(4444);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
-        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), crud);
+        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), repository);
         nets.setMinWaitBetweenAttempts(500);
         //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
 
@@ -90,7 +89,7 @@ public class NetsTest {
         String orderId = "orderid";
         nets.authorize(merchant, card, money, orderId);
         
-        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
+        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         assertEquals(255, data.getOde().length());
@@ -154,7 +153,7 @@ public class NetsTest {
         //Now cancel
         nets.reverse(merchant, orderId);
         
-        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
+        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         
@@ -176,7 +175,7 @@ public class NetsTest {
         //Now capture
         nets.capture(merchant, money, orderId, false);
         
-        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
+        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
                 
@@ -201,7 +200,7 @@ public class NetsTest {
         //Now refund
         nets.capture(merchant, money, orderId, true);
         
-        TransactionData data = crud.read(merchant.getMerchantId()+"_"+orderId);
+        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         

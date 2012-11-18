@@ -26,10 +26,17 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
     private boolean running;
 
     public MockNetsSocketServer() {
-        LOG.info("EXPECTING KEYSTORE FILE AT THIS PATH:");
-        LOG.info("<project>/src/test/resources/keystore (Password must be '123456')");
-        System.setProperty("javax.net.ssl.keyStore", "src/test/resources/keystore");
-        System.setProperty("javax.net.ssl.keyStorePassword", "123456");
+        String path = "src/test/resources/keystore";
+        File file = new File(path);
+        String password = "123456";
+        
+        if(!file.exists()) {
+            LOG.error("KEYSTORE NOT FOUND!!!\n(Expected at {}.)", file.getAbsolutePath());
+        } else {
+            LOG.info("Keystore found at {}\n(Password expected be '{}')", file.getAbsolutePath(), password);
+            System.setProperty("javax.net.ssl.keyStore", path);
+            System.setProperty("javax.net.ssl.keyStorePassword", password);
+        }
 
         serverSocketFactory = SSLServerSocketFactory.getDefault();
     }

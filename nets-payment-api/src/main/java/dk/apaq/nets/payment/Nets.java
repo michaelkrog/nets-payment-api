@@ -8,18 +8,16 @@ import com.solab.iso8583.parse.FieldParseInfo;
 import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
-import dk.apaq.crud.Crud;
+import dk.apaq.framework.repository.Repository;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
 import org.joda.money.Money;
 import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
@@ -38,7 +36,7 @@ public class Nets {
     private final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
     private final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
     private final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
-    private final Crud.Editable<String, TransactionData> crud;
+    private final Repository<TransactionData, String> repository;
     
     private int maxRequestAttempts = DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
     private int minWaitBetweenAttempts = DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
@@ -153,7 +151,7 @@ public class Nets {
                     
                     //Error occurred - if we are gonna try again then sleep a little first according to Nets requirements.
                     if(doAttempt) {
-                        long timeTillNextRequest = minWaitBetweenAttempts - (System.currentTimeMillis() - start);
+                        long timeTillNextRequest = Math.max(0, minWaitBetweenAttempts - (System.currentTimeMillis() - start));
                         try { Thread.sleep(timeTillNextRequest); } catch (InterruptedException ex2) { /* EMPTY */ }
                     }
                 }
@@ -493,9 +491,9 @@ public class Nets {
 
     }
 
-    public Nets(ChannelFactory channelFactory, Crud.Editable<String, TransactionData> persistence) {
+    public Nets(ChannelFactory channelFactory, Repository<TransactionData, String> persistence) {
         this.channelFactory = channelFactory;
-        this.crud = persistence;
+        this.repository = persistence;
 
         expireFormat.setMinimumIntegerDigits(2);
         expireFormat.setMaximumIntegerDigits(2);
@@ -536,14 +534,14 @@ public class Nets {
             data.setOde(response.getOde());
             data.setApprovalCode(response.getApprovalCode());
             data.setCard(card);
-            crud.create(data);
+            repository.save(data);
         } else {
             throw new NetsException("Authorize not approved.", response.getActionCode());
         }
     }
 
     public void capture(Merchant merchant, Money money, String orderId, boolean refund) throws IOException, NetsException {
-        TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
+        TransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
         CaptureRequest request = new CaptureRequest(merchant, data.getCard(), money, orderId, data.getOde(), data.getApprovalCode(), data.getActionCode());
         request.setRefund(refund);
         NetsResponse response = request.send();
@@ -551,21 +549,21 @@ public class Nets {
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
             data.setActionCode(response.getActionCode());
             data.setOde(response.getOde());
-            crud.update(data);
+            repository.save(data);
         } else {
             throw new NetsException("Capture not approved.", response.getActionCode());
         }
     }
 
     public void reverse(Merchant merchant, String orderId) throws IOException, NetsException {
-        TransactionData data = crud.read(buildTransactionDataId(merchant, orderId));
+        TransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
         ReverseRequest request = new ReverseRequest(merchant, data.getCard(), data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode());
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
             data.setActionCode(response.getActionCode());
             data.setOde(response.getOde());
-            crud.update(data);
+            repository.save(data);
         } else {
             throw new NetsException("Reverse not approved.", response.getActionCode());
         }
