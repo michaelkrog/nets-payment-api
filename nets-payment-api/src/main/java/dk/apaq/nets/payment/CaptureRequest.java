@@ -14,7 +14,7 @@ import org.joda.money.Money;
 /**
  * Javadoc
  */
-public class CaptureRequest extends Request<CaptureRequest> {
+public class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
     private boolean recurring;
     private boolean amountDiffers;
     private boolean gambling;

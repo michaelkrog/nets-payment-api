@@ -11,7 +11,7 @@ import org.joda.money.Money;
  *
  * @author michael
  */
-public class AuthorizeRequest extends Request<AuthorizeRequest> {
+public class AuthorizeRequest extends AbstractNetsRequest<AuthorizeRequest> {
     private boolean recurring;
     private boolean estimatedAmount;
     private boolean gambling;

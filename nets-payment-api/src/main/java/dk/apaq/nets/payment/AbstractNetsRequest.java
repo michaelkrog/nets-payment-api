@@ -14,7 +14,7 @@ import org.joda.money.Money;
  * Abstract class for Requests.
  * @author michael
  */
-abstract class Request<T> {
+abstract class AbstractNetsRequest<T> {
     protected final Merchant merchant;
     protected final Card card;
     protected final Money money;
@@ -29,11 +29,11 @@ abstract class Request<T> {
     protected int maxRequestAttempts = Nets.DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
     protected int minWaitBetweenAttempts = Nets.DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
 
-    public Request(Merchant merchant, Card card, Money money, String orderId, ChannelFactory channelFactory) {
+    public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, ChannelFactory channelFactory) {
         this(merchant, card, money, orderId, null, channelFactory);
     }
 
-    public Request(Merchant merchant, Card card, Money money, String orderId, String ode, ChannelFactory channelFactory) {
+    public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, String ode, ChannelFactory channelFactory) {
         Validate.notNull(merchant, "merchant must be specified");
         Validate.notNull(card, "card must be specified");
         Validate.notNull(money, "money must be specified");

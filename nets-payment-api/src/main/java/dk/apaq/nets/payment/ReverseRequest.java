@@ -14,7 +14,7 @@ import org.joda.money.Money;
 /**
  * Javadoc
  */
-public class ReverseRequest extends Request<ReverseRequest> {
+public class ReverseRequest extends AbstractNetsRequest<ReverseRequest> {
     private String approvalCode;
     private boolean fraudSuspected;
     private boolean malfunctionSuspected;

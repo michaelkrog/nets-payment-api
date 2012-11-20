@@ -168,7 +168,7 @@ public class Nets {
         return merchant.getMerchantId() + "_" + orderId;
     }
     
-    private void setRequestRetryProperties(Request req) {
+    private void setRequestRetryProperties(AbstractNetsRequest req) {
         req.setMaxRequestAttempts(maxRequestAttempts);
         req.setMinWaitBetweenAttempts(minWaitBetweenAttempts);
     }
