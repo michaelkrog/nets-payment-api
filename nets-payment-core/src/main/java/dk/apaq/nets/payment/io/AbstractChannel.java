@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.Arrays;
 import org.apache.commons.io.HexDump;
+import org.apache.commons.lang.Validate;
 
 /**
  *
@@ -24,6 +25,7 @@ public abstract class AbstractChannel implements Channel {
     
     
     protected IsoMessage byteArrayToMessage(byte[] data) throws IOException {
+        Validate.isTrue(data.length>32, "The data array does not contain the minimum number of bytes required(32).");
         try {
             byte[] headerData = Arrays.copyOfRange(data, 0, 32);
             byte[] messageData = Arrays.copyOfRange(data, 32, data.length);

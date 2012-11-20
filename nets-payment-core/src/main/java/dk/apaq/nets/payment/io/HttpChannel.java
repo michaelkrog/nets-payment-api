@@ -26,6 +26,10 @@ public class HttpChannel extends AbstractChannel {
     private final URL url;
     private final ChannelLogger channelLogger;
 
+    public HttpChannel(MessageFactory messageFactory, HttpClient client, URL url) {
+        this(null, messageFactory, client, url);
+    }
+    
     public HttpChannel(ChannelLogger channelLogger, MessageFactory messageFactory, HttpClient client, URL url) {
         super(messageFactory);
         this.client = client;
@@ -35,7 +39,7 @@ public class HttpChannel extends AbstractChannel {
 
     
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
-        LOG.debug("Sendding message via HttpChannel [message={}]", message);
+        LOG.debug("Sending message via HttpChannel [message={}]", message);
         byte[] msgData = messageToByteArray(message);
        
         if(channelLogger != null) {
@@ -53,6 +57,10 @@ public class HttpChannel extends AbstractChannel {
             throw new IOException("The status code from the server was not ok. " + response.getStatusLine().getReasonPhrase());
         }
         
+        if(response.getEntity() == null) {
+            throw new IOException("The message contained in the response could not be read.");
+        }
+        
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         IOUtils.copy(response.getEntity().getContent(), buf);
         buf.flush();
@@ -64,7 +72,11 @@ public class HttpChannel extends AbstractChannel {
             channelLogger.onMessageRecieved(responseData);
         }
         
-        return byteArrayToMessage(responseData);
+        message = byteArrayToMessage(responseData);
+        if (message == null) {
+            throw new IOException("The message contained in the response could not be parsed. View log for more details.");
+        }
+        return message;
     }
     
 }
