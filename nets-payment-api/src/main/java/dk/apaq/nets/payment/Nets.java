@@ -22,15 +22,13 @@ import org.slf4j.LoggerFactory;
 public class Nets {
 
     private static final Logger LOG = LoggerFactory.getLogger(Nets.class);
-    public static final int DEFAULT_MAX_ATTEMPTS_PER_REQUEST = 5;
-    public static final int DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS = 60000;
     private final ChannelFactory channelFactory;
     private final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
     private final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
     private final Repository<TransactionData, String> repository;
     
-    private int maxRequestAttempts = DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
-    private int minWaitBetweenAttempts = DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
+    private int maxRequestAttempts = AbstractNetsRequest.DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
+    private int minWaitBetweenAttempts = AbstractNetsRequest.DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
 
     private void init() {
         LOG.info("Initializing Nets instance.");
@@ -96,7 +94,7 @@ public class Nets {
     }
 
     public void setMaxRequestAttempts(int maxRequestAttempts) {
-        maxRequestAttempts = maxRequestAttempts > 0 ? maxRequestAttempts : DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
+        maxRequestAttempts = maxRequestAttempts > 0 ? maxRequestAttempts : AbstractNetsRequest.DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
         this.maxRequestAttempts = maxRequestAttempts;
     }
 
