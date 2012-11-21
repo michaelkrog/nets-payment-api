@@ -3,8 +3,6 @@
  */
 package dk.apaq.nets.payment;
 
-import dk.apaq.nets.payment.ActionCode;
-
 /**
  *
  */
