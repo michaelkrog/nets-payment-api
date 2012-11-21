@@ -25,8 +25,9 @@ public abstract class AbstractChannel implements Channel {
     
     
     protected IsoMessage byteArrayToMessage(byte[] data) throws IOException {
-        Validate.isTrue(data.length>32, "The data array does not contain the minimum number of bytes required(32).");
+        
         try {
+            Validate.isTrue(data.length>32, "The data array does not contain the minimum number of bytes required(32).");
             byte[] headerData = Arrays.copyOfRange(data, 0, 32);
             byte[] messageData = Arrays.copyOfRange(data, 32, data.length);
             
@@ -40,6 +41,8 @@ public abstract class AbstractChannel implements Channel {
             throw new IOException("Unable to parse response.", ex);
         } catch (UnsupportedEncodingException ex) {
             throw new IOException("Unable to parse response because of encoding issues.", ex);
+        } catch(IllegalArgumentException ex) {
+            throw new IOException("Unable to parse response because data did not parse validation.", ex);
         }
     }
 
