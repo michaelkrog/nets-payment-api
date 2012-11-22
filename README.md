@@ -9,17 +9,17 @@ Or by mailing Nets: it-verification@nets.eu
 
 Example of the current API state:
 ```Java
-Persistence persistence = ...;
-ChannelFactory cf = ...;
-Nets nets = new Nets(cf, persistence);
+Repository<TransactionData, String> dataRep = ...;
+ChannelFactory cf = new SslSocketChannelFactory("<host>", <port>);
+Nets nets = new Nets(cf, dataRep);
 Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
 Card card = new Card("<card>", 12, 12, "123");
-Money money = Money.of(CurrencyUnit.USD, 199.99);
+Money money = Money.of(CurrencyUnit.USD, 199.95);
 String orderId = "<orderid>";
 
 try{
     nets.authorize(merchant, card, money, orderId);
-    nets.capture(merchant, card, money, orderId);
+    nets.capture(merchant, money, orderId, refund);
 } catch(NetsException ex) {
     LOG.error("Not approved. [action={};merchantAction={}]", ex.getAction(), ex.getAction().getMerchantAction());
 }
