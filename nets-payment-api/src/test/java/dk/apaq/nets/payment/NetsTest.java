@@ -232,6 +232,6 @@ public class NetsTest {
         long time = end-start;
         
         System.out.println("Done in " + time + "ms.");
-        assertTrue(time<1000);
+        assertTrue("Did not complete within 1000ms (it took " + time + "ms)", time<1000);
     }
 }

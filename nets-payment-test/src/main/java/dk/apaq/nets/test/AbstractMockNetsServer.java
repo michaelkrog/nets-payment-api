@@ -131,7 +131,7 @@ public abstract class AbstractMockNetsServer {
             
             if(nextRequestFails) {
                 nextRequestFails = false;
-                throw new IOException("FAIL");
+                throw new IOException("Failed by demand");
             }
             
             
