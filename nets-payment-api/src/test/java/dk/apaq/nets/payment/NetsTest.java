@@ -67,7 +67,7 @@ public class NetsTest {
         netsServer.start(4444);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
-        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), repository);
+        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, /*channelLogger*/null, 500), repository);
         nets.setMinWaitBetweenAttempts(500);
         //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
 
