@@ -1,10 +1,11 @@
 package dk.apaq.nets.payment;
 
 /**
- *
+ * Specifies positions and length for message fields.
  * @author michaelzachariassenkrog
  */
-public class MessageFields {
+public final class MessageFields {
+    //CHECKSTYLE:OFF
     public static final int PRIMARY_ACCOUNT_NUMBER = 2;
     public static final int PROCESSING_CODE = 3;
     public static final int AMOUNT = 4;
@@ -41,7 +42,7 @@ public class MessageFields {
     public static final int CARD_ACCEPTOR_NAME_LOCATION_LENGTH = 99;
     public static final int CURRENCY_CODE_LENGTH = 3;
     public static final int AUTH_ODE_LENGTH= 255;
-    
+    //CHECKSTYLE:OFF
     
     private MessageFields() {}
 }

@@ -11,22 +11,42 @@ import org.apache.http.params.CoreConnectionPNames;
  */
 public class HttpChannelFactory extends AbstractChannelFactory {
 
-    private static final MessageFactory messageFactory = new MessageFactory();
+    private static final MessageFactory MESSAGE_FACTORY = new MessageFactory();
     private URL url;
     private HttpClient client;
     
+    /**
+     * Creates new instance.
+     * @param url 
+     */
     public HttpChannelFactory(URL url) {
         this(url, null, null);
     }
 
+    /**
+     * Create new instance.
+     * @param url
+     * @param channelLogger 
+     */
     public HttpChannelFactory(URL url, ChannelLogger channelLogger) {
         this(url, null, channelLogger);
     }
 
+    /**
+     * Creates new instance.
+     * @param url
+     * @param client 
+     */
     public HttpChannelFactory(URL url, HttpClient client) {
         this(url, client, null);
     }
     
+    /**
+     * Cretaes new instance.
+     * @param url
+     * @param client
+     * @param channelLogger 
+     */
     public HttpChannelFactory(URL url, HttpClient client, ChannelLogger channelLogger) {
         super(channelLogger);
         this.url = url;
@@ -35,13 +55,20 @@ public class HttpChannelFactory extends AbstractChannelFactory {
     }
     
     
-    
+    /**
+     * Creates a new Channel.
+     * @return The channel created.
+     */
     public Channel createChannel() {
-        return new HttpChannel(channelLogger, messageFactory, client, url);
+        return new HttpChannel(getChannelLogger(), MESSAGE_FACTORY, client, url);
     }
 
+    /**
+     * Retrieves the message factory ued by this factory.
+     * @return 
+     */
     public MessageFactory getMessageFactory() {
-        return messageFactory;
+        return MESSAGE_FACTORY;
     }
     
 }

@@ -1,7 +1,7 @@
 package dk.apaq.nets.payment;
 
 /**
- *
+ * MerchantActions as deinfed by Nets.
  * @author michael
  */
 public enum MerchantAction {
@@ -17,10 +17,18 @@ public enum MerchantAction {
         this.code = code;
     }
 
+    /**
+     * Retreieves a description for the MerchantAction.
+     * @return The description.
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Retrieves the code of the action.
+     * @return The code.
+     */
     public String getCode() {
         return code;
     }

@@ -1,7 +1,7 @@
 package dk.apaq.nets.payment;
 
 /**
- *
+ * FunctionCode foru se in NetRequests.
  * @author michael
  */
 public enum FunctionCode {
@@ -20,11 +20,20 @@ public enum FunctionCode {
         this.code = code;
     }
 
+    /**
+     * Retrieves the code as string.
+     * @return The code.
+     */
     public String getCode() {
         return code;
     }
     
     
+    /**
+     * Retrieves the FunctionCode from string code.
+     * @param code The string code.
+     * @return The FunctionCode or null if not match found.
+     */
     public static FunctionCode fromCode(String code) {
         for(FunctionCode current : FunctionCode.values()) {
             if(code.equals(current.code)) {
