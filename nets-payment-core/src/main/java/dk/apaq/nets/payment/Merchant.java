@@ -9,7 +9,7 @@ public class Merchant {
     private String name;
     private String merchantId;
     private Address address;
-    private String businessCode;
+    private int businessCode;
     
     public Merchant() {
     }
@@ -20,11 +20,11 @@ public class Merchant {
         this.address = address;
     }
 
-    public String getBusinessCode() {
+    public int getBusinessCode() {
         return businessCode;
     }
 
-    public void setBusinessCode(String businessCode) {
+    public void setBusinessCode(int businessCode) {
         this.businessCode = businessCode;
     }
     

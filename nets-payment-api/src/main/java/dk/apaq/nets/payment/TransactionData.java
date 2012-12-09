@@ -11,6 +11,7 @@ public class TransactionData {
     private String _id;
     private String ode;
     private String approvalCode;
+    private String processingCode;
     private Money approvedAmount;
     private ActionCode actionCode;
     private Card card;
@@ -39,6 +40,14 @@ public class TransactionData {
         this.approvalCode = approvalCode;
     }
 
+    public String getProcessingCode() {
+        return processingCode;
+    }
+
+    public void setProcessingCode(String processingCode) {
+        this.processingCode = processingCode;
+    }
+    
     public Money getApprovedAmount() {
         return approvedAmount;
     }

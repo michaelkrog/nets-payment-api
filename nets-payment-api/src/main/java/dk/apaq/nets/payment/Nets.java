@@ -151,6 +151,7 @@ public class Nets {
             data.setApprovedAmount(money);
             data.setOde(response.getOde());
             data.setApprovalCode(response.getApprovalCode());
+            data.setProcessingCode(response.getProcessingCode());
             data.setCard(card);
             repository.save(data);
         } else {
@@ -200,7 +201,8 @@ public class Nets {
      */
     public void reverse(Merchant merchant, String orderId) throws IOException, NetsException {
         TransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
-        ReverseRequest request = new ReverseRequest(merchant, data.getCard(), data.getApprovedAmount(), orderId, data.getOde(), data.getApprovalCode(), channelFactory);
+        ReverseRequest request = new ReverseRequest(merchant, data.getCard(), data.getApprovedAmount(), orderId, data.getOde(),
+                data.getProcessingCode(), data.getApprovalCode(), channelFactory);
         setRequestRetryProperties(request);
         NetsResponse response = request.send();
 

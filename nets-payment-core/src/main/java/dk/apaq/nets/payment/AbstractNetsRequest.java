@@ -1,42 +1,58 @@
 package dk.apaq.nets.payment;
 
-import com.solab.iso8583.IsoMessage;
-import dk.apaq.nets.payment.io.Channel;
-import dk.apaq.nets.payment.io.ChannelFactory;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+
+import com.solab.iso8583.IsoMessage;
+import dk.apaq.nets.payment.io.Channel;
+import dk.apaq.nets.payment.io.ChannelFactory;
 import org.apache.commons.lang.Validate;
 import org.joda.money.Money;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Abstract class for Requests.
- * @author michael
+ *
+ * @param <T> Type of Request.
  */
 abstract class AbstractNetsRequest<T> {
     
     public static final int DEFAULT_MAX_ATTEMPTS_PER_REQUEST = 5;
     public static final int DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS = 60000;
-    
-    protected final Merchant merchant;
-    protected final Card card;
-    protected final Money money;
-    protected final String orderId;
-    protected final String ode;
-    protected final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
-    protected final NumberFormat expireFormat = NumberFormat.getIntegerInstance();
-    protected final NumberFormat cvdFormat = NumberFormat.getIntegerInstance();
-    
-    protected String terminalId = "";
-    protected final ChannelFactory channelFactory;
-    protected int maxRequestAttempts = DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
-    protected int minWaitBetweenAttempts = DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
+    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyMMddHHmmss");
+    public static final NumberFormat EXPIRE_FORMAT = NumberFormat.getIntegerInstance();
+    public static final NumberFormat CVD_FORMAT = NumberFormat.getIntegerInstance();
+    public static final NumberFormat BUSINESS_CODE_FORMAT = NumberFormat.getIntegerInstance();
+    private static final int ADDRESS_WITHOUT_COUNTRY_LENGTH = 96;
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractNetsRequest.class);
 
+    static {
+        EXPIRE_FORMAT.setMaximumIntegerDigits(2);
+        EXPIRE_FORMAT.setMinimumIntegerDigits(2);
+        CVD_FORMAT.setMaximumIntegerDigits(3);
+        CVD_FORMAT.setMinimumIntegerDigits(3);
+        BUSINESS_CODE_FORMAT.setMaximumIntegerDigits(4);
+        BUSINESS_CODE_FORMAT.setMinimumIntegerDigits(4);
+        BUSINESS_CODE_FORMAT.setGroupingUsed(false);
+    }
+
+    private final Merchant merchant;
+    private final Card card;
+    private final Money money;
+    private final String orderId;
+    private final String ode;
+    private String terminalId = "";
+    private final ChannelFactory channelFactory;
+    private int maxRequestAttempts = DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
+    private int minWaitBetweenAttempts = DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
+    
     public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, ChannelFactory channelFactory) {
         this(merchant, card, money, orderId, null, channelFactory);
     }
-
+    
     public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, String ode, ChannelFactory channelFactory) {
         Validate.notNull(merchant, "merchant must be specified");
         Validate.notNull(card, "card must be specified");
@@ -49,58 +65,62 @@ abstract class AbstractNetsRequest<T> {
         this.ode = ode;
         this.channelFactory = channelFactory;
     }
-
+    
+    public ChannelFactory getChannelFactory() {
+        return channelFactory;
+    }
+    
     public int getMaxRequestAttempts() {
         return maxRequestAttempts;
     }
-
-    public void setMaxRequestAttempts(int maxRequestAttempts) {
-        this.maxRequestAttempts = maxRequestAttempts;
+    
+    public void setMaxRequestAttempts(int value) {
+        this.maxRequestAttempts = value;
     }
-
+    
     public int getMinWaitBetweenAttempts() {
         return minWaitBetweenAttempts;
     }
-
-    public void setMinWaitBetweenAttempts(int minWaitBetweenAttempts) {
-        this.minWaitBetweenAttempts = minWaitBetweenAttempts;
+    
+    public void setMinWaitBetweenAttempts(int value) {
+        this.minWaitBetweenAttempts = value;
     }
-
-    public T setTerminalId(String terminalId) {
-        this.terminalId = terminalId;
+    
+    public T setTerminalId(String value) {
+        this.terminalId = value;
         return (T) this;
     }
-
+    
     public Card getCard() {
         return card;
     }
-
+    
     public Merchant getMerchant() {
         return merchant;
     }
-
+    
     public Money getMoney() {
         return money;
     }
-
+    
     public String getOrderId() {
         return orderId;
     }
-
+    
     public String getTerminalId() {
         return terminalId;
     }
-
+    
     public String getOde() {
         return ode;
     }
-
+    
     protected String fillString(String value, char character, int length) {
         StringBuilder sb = new StringBuilder(value);
         fillString(sb, character, length);
         return sb.toString();
     }
-
+    
     protected void fillString(StringBuilder builder, char character, int length) {
         if (builder.length() > length) {
             builder.delete(length, builder.length());
@@ -110,7 +130,7 @@ abstract class AbstractNetsRequest<T> {
             }
         }
     }
-
+    
     protected String buildAddressField() {
         StringBuilder address = new StringBuilder();
         address.append(merchant.getName());
@@ -120,19 +140,21 @@ abstract class AbstractNetsRequest<T> {
         address.append(merchant.getAddress().getCity());
         address.append("\\");
         address.append(merchant.getAddress().getPostalCode());
-        fillString(address, ' ', 96);
+        fillString(address, ' ', ADDRESS_WITHOUT_COUNTRY_LENGTH);
         address.append(merchant.getAddress().getCountryCode());
         return address.toString();
     }
-
+    
     protected abstract IsoMessage buildMessage();
-
+    
     public NetsResponse send() throws IOException {
         IsoMessage request = buildMessage();
         IsoMessage response = null;
         int attempts = 0;
         boolean doAttempt = true;
         long start = System.currentTimeMillis();
+        IOException lastIOException = null;
+        
         while (doAttempt) {
             doAttempt = false;
             Channel channel = channelFactory.createChannel();
@@ -143,29 +165,33 @@ abstract class AbstractNetsRequest<T> {
                     return new NetsResponse(ActionCode.Function_Not_Supported, null);
                 }
             } catch (IOException ex) {
+                lastIOException = ex;
                 doAttempt = response == null && attempts < maxRequestAttempts;
                 //Error occurred - if we are gonna try again then sleep a little first according to Nets requirements.
                 if (doAttempt) {
                     long timeTillNextRequest = Math.max(0, minWaitBetweenAttempts - (System.currentTimeMillis() - start));
-                    try {
-                        Thread.sleep(timeTillNextRequest);
-                    } catch (InterruptedException ex2) {
-                        /* EMPTY */
-                        /* EMPTY */
-                    }
+                    sleep(timeTillNextRequest);
                 }
             }
         }
         if (response == null) {
-            throw new IOException("Unable to communicate with Nets.");
+            throw new IOException("Unable to communicate with Nets.", lastIOException);
         }
+        String processingCode = response.getField(MessageFields.PROCESSING_CODE).toString();
         String actionCodeString = response.getField(MessageFields.ACTION_CODE).toString();
         String newOde = response.getField(MessageFields.AUTH_ODE).toString();
         String approvalCode = null;
         if (response.hasField(MessageFields.APPROVAL_CODE)) {
             approvalCode = response.getField(MessageFields.APPROVAL_CODE).toString();
         }
-        return new NetsResponse(ActionCode.fromCode(actionCodeString), newOde, approvalCode);
+        return new NetsResponse(ActionCode.fromCode(actionCodeString), newOde, processingCode, approvalCode);
     }
     
+    private void sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException ex) {
+            LOG.error("Error occured when trying to sleep between request attempts.", ex);
+        }
+    }
 }

@@ -26,5 +26,22 @@ public class MessageFields {
     public static final int AUTH_ODE= 56;
     public static final int AUTHORIZATION_LIFE_CYCLE= 57;
     
+    public static final int PROCESSING_CODE_LENGTH = 6;
+    public static final int AMOUNT_LENGTH = 12;
+    public static final int LOCAL_TIME_LENGTH = 12;
+    public static final int EXPIRATION_LENGTH = 4;
+    public static final int POINT_OF_SERVICE_LENGTH = 12;
+    public static final int FUNCTION_CODE_LENGTH = 3;
+    public static final int MESSAGE_REASON_CODE_LENGTH = 4;
+    public static final int CARD_ACCEPTOR_BUSINESS_CODE_LENGTH = 4;
+    public static final int APPROVAL_CODE_LENGTH = 6;
+    public static final int ACTION_CODE_LENGTH = 3;
+    public static final int CARD_ACCEPTOR_TERMINAL_ID_LENGTH = 8;
+    public static final int CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH = 15;
+    public static final int CARD_ACCEPTOR_NAME_LOCATION_LENGTH = 99;
+    public static final int CURRENCY_CODE_LENGTH = 3;
+    public static final int AUTH_ODE_LENGTH= 255;
+    
+    
     private MessageFields() {}
 }

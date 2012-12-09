@@ -52,13 +52,16 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
             @Override
             public void run() {
                 Socket socket = null;
+                InputStream in = null;
+                OutputStream out = null;
+                
                 while (running) {
                     try {
                         socket = serverSocket.accept();
                         LOG.debug("Socket created [client={}].", socket.getRemoteSocketAddress());
                         
-                        InputStream in = socket.getInputStream();
-                        OutputStream out = socket.getOutputStream();
+                        in = socket.getInputStream();
+                        out = socket.getOutputStream();
                         
                         LOG.debug("Reading header from socket");
                         PGTMHeader header = readHeader(in);
@@ -89,13 +92,16 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
                             LOG.error("Unable to accept connection.", ex);
                             PGTMHeader failHeader = new PGTMHeader(0, "0001");
                             try {
-                                bytesToOutputStream(failHeader.toByteArray(), socket.getOutputStream());
+                                bytesToOutputStream(failHeader.toByteArray(), out);
                             } catch (IOException ex1) {
                                 LOG.error("Unable to send error data to client.", ex);
                             }
                         }
                     } finally {
                         try {
+                            in.close();
+                            out.close();
+                        
                             if (socket != null) {
                                 LOG.debug("Closing socket.");
                                 socket.close();
