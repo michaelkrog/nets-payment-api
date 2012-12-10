@@ -102,7 +102,7 @@ public class Card {
         if (this.expireMonth != other.expireMonth) {
             return false;
         }
-        if (this.cvd != other.cvd) {
+        if (!this.cvd.equals(other.cvd)) {
             return false;
         }
         return true;

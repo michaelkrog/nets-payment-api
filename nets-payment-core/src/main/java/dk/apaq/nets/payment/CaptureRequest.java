@@ -4,6 +4,8 @@
 
 package dk.apaq.nets.payment;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.solab.iso8583.IsoMessage;
@@ -133,6 +135,7 @@ public final class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
 
     @Override
     protected IsoMessage buildMessage() {
+        DateFormat df = new SimpleDateFormat(DATE_FORMAT);
         IsoMessage message = getChannelFactory().getMessageFactory().newMessage(MessageTypes.CAPTURE_REQUEST);
         message.setIsoHeader(PsipHeader.OK.toString());
         String expire = EXPIRE_FORMAT.format(getCard().getExpireYear()) + EXPIRE_FORMAT.format(getCard().getExpireMonth());
@@ -150,7 +153,7 @@ public final class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
         message.setField(PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, getCard().getCardNumber()));
         message.setField(PROCESSING_CODE, new IsoValue<String>(IsoType.NUMERIC, processingCode, PROCESSING_CODE_LENGTH));
         message.setField(AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, getMoney().getAmountMinorInt(), AMOUNT_LENGTH));
-        message.setField(LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, DATE_FORMAT.format(new Date()), LOCAL_TIME_LENGTH));
+        message.setField(LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), LOCAL_TIME_LENGTH));
         message.setField(EXPIRATION, new IsoValue<String>(IsoType.NUMERIC, expire, EXPIRATION_LENGTH));
         message.setField(POINT_OF_SERVICE, new IsoValue<String>(IsoType.ALPHA, pointOfService, POINT_OF_SERVICE_LENGTH));
         message.setField(FUNCTION_CODE, new IsoValue<String>(IsoType.NUMERIC, function, FUNCTION_CODE_LENGTH));

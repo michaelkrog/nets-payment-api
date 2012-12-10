@@ -139,7 +139,6 @@ public class PGTMHeader {
         byte[] lengthData = Arrays.copyOfRange(data, 0, 2);
         byte[] identityData = Arrays.copyOfRange(data, 2, 28);
         byte[] networkData = Arrays.copyOfRange(data, 28, 30);
-        byte[] fixedData = Arrays.copyOfRange(data, 30, 32);
         //CHECKSTYLE:ON
         short length = (short) (lengthData[1] & FULL_BYTE | (lengthData[0] << BITS_IN_BYTE));
         length -= HEADER_LENGTH; //We take away the length of the header - 32 bytes

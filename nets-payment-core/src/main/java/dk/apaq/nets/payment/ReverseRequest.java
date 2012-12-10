@@ -4,6 +4,8 @@
 
 package dk.apaq.nets.payment;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import com.solab.iso8583.IsoMessage;
@@ -78,6 +80,7 @@ public final class ReverseRequest extends AbstractNetsRequest<ReverseRequest> {
 
     @Override
     protected IsoMessage buildMessage() {
+        DateFormat df = new SimpleDateFormat(DATE_FORMAT);
         IsoMessage message = getChannelFactory().getMessageFactory().newMessage(MessageTypes.REVERSAL_ADVICE_REQUEST);
         message.setIsoHeader(PsipHeader.OK.toString());
         String function = FunctionCode.Reverse_FullReversal.getCode();
@@ -92,7 +95,7 @@ public final class ReverseRequest extends AbstractNetsRequest<ReverseRequest> {
         message.setField(PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, getCard().getCardNumber()));
         message.setField(PROCESSING_CODE, new IsoValue<String>(IsoType.NUMERIC, processingCode, PROCESSING_CODE_LENGTH));
         message.setField(AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, getMoney().getAmountMinorInt(), AMOUNT_LENGTH));
-        message.setField(LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, DATE_FORMAT.format(new Date()), LOCAL_TIME_LENGTH));
+        message.setField(LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), LOCAL_TIME_LENGTH));
         message.setField(FUNCTION_CODE, new IsoValue<String>(IsoType.NUMERIC, function, FUNCTION_CODE_LENGTH));
         message.setField(MESSAGE_REASON_CODE, new IsoValue<String>(IsoType.NUMERIC, reason, MESSAGE_REASON_CODE_LENGTH));
         message.setField(CARD_ACCEPTOR_BUSINESS_CODE,

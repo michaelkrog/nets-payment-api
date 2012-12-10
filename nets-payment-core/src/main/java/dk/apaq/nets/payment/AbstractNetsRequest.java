@@ -22,7 +22,7 @@ abstract class AbstractNetsRequest<T> {
     
     public static final int DEFAULT_MAX_ATTEMPTS_PER_REQUEST = 5;
     public static final int DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS = 60000;
-    public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyMMddHHmmss");
+    public static final String DATE_FORMAT = "yyMMddHHmmss";
     public static final NumberFormat EXPIRE_FORMAT = NumberFormat.getIntegerInstance();
     public static final NumberFormat CVD_FORMAT = NumberFormat.getIntegerInstance();
     public static final NumberFormat BUSINESS_CODE_FORMAT = NumberFormat.getIntegerInstance();
