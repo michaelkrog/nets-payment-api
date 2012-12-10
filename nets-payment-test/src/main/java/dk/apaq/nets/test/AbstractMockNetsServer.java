@@ -1,95 +1,126 @@
 package dk.apaq.nets.test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
-import com.solab.iso8583.parse.*;
-import dk.apaq.nets.payment.MessageFields;
+import com.solab.iso8583.parse.AlphaParseInfo;
+import com.solab.iso8583.parse.FieldParseInfo;
+import com.solab.iso8583.parse.LllvarParseInfo;
+import com.solab.iso8583.parse.LlvarParseInfo;
+import com.solab.iso8583.parse.NumericParseInfo;
 import dk.apaq.nets.payment.MessageTypes;
 import dk.apaq.nets.payment.PGTMHeader;
 import dk.apaq.nets.payment.PsipHeader;
-import java.io.*;
-import java.net.UnknownHostException;
-import java.text.ParseException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.commons.io.IOUtils;
+
+import static dk.apaq.nets.payment.MessageFields.*;
 
 /**
  *
  * @author krog
  */
 public abstract class AbstractMockNetsServer {
-    protected Bank bank = new Bank();
-    protected MessageFactory messageFactory = new MessageFactory();
+    private Bank bank = new Bank();
+    private MessageFactory messageFactory = new MessageFactory();
     private boolean nextRequestFails = false;
 
     public AbstractMockNetsServer() {
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
-        authReqFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        authReqFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
-        authReqFields.put(MessageFields.AMOUNT, new NumericParseInfo(12));
-        authReqFields.put(MessageFields.LOCAL_TIME, new NumericParseInfo(12));
-        authReqFields.put(MessageFields.EXPIRATION, new NumericParseInfo(4));
-        authReqFields.put(MessageFields.POINT_OF_SERVICE, new AlphaParseInfo(12));
-        authReqFields.put(MessageFields.FUNCTION_CODE, new NumericParseInfo(3));
-        authReqFields.put(MessageFields.MESSAGE_REASON_CODE, new NumericParseInfo(4));
-        authReqFields.put(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(4));
-        authReqFields.put(MessageFields.ACQUIRER_REFERENCE, new LlvarParseInfo());
-        authReqFields.put(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
-        authReqFields.put(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
-        authReqFields.put(MessageFields.CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
-        authReqFields.put(MessageFields.ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
-        authReqFields.put(MessageFields.CURRENCY_CODE, new AlphaParseInfo(3));
-        authReqFields.put(MessageFields.AUTH_ODE, new LllvarParseInfo());
+        authReqFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        authReqFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
+        authReqFields.put(AMOUNT, new NumericParseInfo(AMOUNT_LENGTH));
+        authReqFields.put(LOCAL_TIME, new NumericParseInfo(LOCAL_TIME_LENGTH));
+        authReqFields.put(EXPIRATION, new NumericParseInfo(EXPIRATION_LENGTH));
+        authReqFields.put(POINT_OF_SERVICE, new AlphaParseInfo(POINT_OF_SERVICE_LENGTH));
+        authReqFields.put(FUNCTION_CODE, new NumericParseInfo(FUNCTION_CODE_LENGTH));
+        authReqFields.put(MESSAGE_REASON_CODE, new NumericParseInfo(MESSAGE_REASON_CODE_LENGTH));
+        authReqFields.put(CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(CARD_ACCEPTOR_BUSINESS_CODE_LENGTH));
+        authReqFields.put(ACQUIRER_REFERENCE, new LlvarParseInfo());
+        authReqFields.put(CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(CARD_ACCEPTOR_TERMINAL_ID_LENGTH));
+        authReqFields.put(CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
+        authReqFields.put(CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        authReqFields.put(ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
+        authReqFields.put(CURRENCY_CODE, new AlphaParseInfo(CURRENCY_CODE_LENGTH));
+        authReqFields.put(AUTH_ODE, new LllvarParseInfo());
         
         messageFactory.setParseMap(MessageTypes.AUTHORIZATION_REQUEST, authReqFields);
         
         Map<Integer, FieldParseInfo> reverseReqFields = new HashMap<Integer, FieldParseInfo>();
-        reverseReqFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        reverseReqFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
-        reverseReqFields.put(MessageFields.AMOUNT, new NumericParseInfo(12));
-        reverseReqFields.put(MessageFields.LOCAL_TIME, new NumericParseInfo(12));
-        reverseReqFields.put(MessageFields.FUNCTION_CODE, new NumericParseInfo(3));
-        reverseReqFields.put(MessageFields.MESSAGE_REASON_CODE, new NumericParseInfo(4));
-        reverseReqFields.put(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(4));
-        reverseReqFields.put(MessageFields.ACQUIRER_REFERENCE, new LlvarParseInfo());
-        reverseReqFields.put(MessageFields.APPROVAL_CODE, new AlphaParseInfo(6));
-        reverseReqFields.put(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
-        reverseReqFields.put(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
-        reverseReqFields.put(MessageFields.CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
-        reverseReqFields.put(MessageFields.CURRENCY_CODE, new AlphaParseInfo(3));
-        reverseReqFields.put(MessageFields.AUTH_ODE, new LllvarParseInfo());
+        reverseReqFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        reverseReqFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
+        reverseReqFields.put(AMOUNT, new NumericParseInfo(AMOUNT_LENGTH));
+        reverseReqFields.put(LOCAL_TIME, new NumericParseInfo(LOCAL_TIME_LENGTH));
+        reverseReqFields.put(FUNCTION_CODE, new NumericParseInfo(FUNCTION_CODE_LENGTH));
+        reverseReqFields.put(MESSAGE_REASON_CODE, new NumericParseInfo(MESSAGE_REASON_CODE_LENGTH));
+        reverseReqFields.put(CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(CARD_ACCEPTOR_BUSINESS_CODE_LENGTH));
+        reverseReqFields.put(ACQUIRER_REFERENCE, new LlvarParseInfo());
+        reverseReqFields.put(APPROVAL_CODE, new AlphaParseInfo(APPROVAL_CODE_LENGTH));
+        reverseReqFields.put(CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(CARD_ACCEPTOR_TERMINAL_ID_LENGTH));
+        reverseReqFields.put(CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
+        reverseReqFields.put(CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        reverseReqFields.put(CURRENCY_CODE, new AlphaParseInfo(CURRENCY_CODE_LENGTH));
+        reverseReqFields.put(AUTH_ODE, new LllvarParseInfo());
         
         messageFactory.setParseMap(MessageTypes.REVERSAL_ADVICE_REQUEST, reverseReqFields);      
         
         Map<Integer, FieldParseInfo> captureReqFields = new HashMap<Integer, FieldParseInfo>();
-        captureReqFields.put(MessageFields.PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        captureReqFields.put(MessageFields.PROCESSING_CODE, new NumericParseInfo(6));
-        captureReqFields.put(MessageFields.AMOUNT, new NumericParseInfo(12));
-        captureReqFields.put(MessageFields.LOCAL_TIME, new NumericParseInfo(12));
-        captureReqFields.put(MessageFields.EXPIRATION, new NumericParseInfo(4));
-        captureReqFields.put(MessageFields.POINT_OF_SERVICE, new AlphaParseInfo(12));
-        captureReqFields.put(MessageFields.FUNCTION_CODE, new NumericParseInfo(3));
-        captureReqFields.put(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(4));
-        captureReqFields.put(MessageFields.ACQUIRER_REFERENCE, new LlvarParseInfo());
-        captureReqFields.put(MessageFields.APPROVAL_CODE, new AlphaParseInfo(6));
-        captureReqFields.put(MessageFields.ACTION_CODE, new NumericParseInfo(3));
-        captureReqFields.put(MessageFields.CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(8));
-        captureReqFields.put(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(15));
-        captureReqFields.put(MessageFields.CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
-        captureReqFields.put(MessageFields.ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
-        captureReqFields.put(MessageFields.CURRENCY_CODE, new AlphaParseInfo(3));
-        captureReqFields.put(MessageFields.AUTH_ODE, new LllvarParseInfo());
+        captureReqFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
+        captureReqFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
+        captureReqFields.put(AMOUNT, new NumericParseInfo(AMOUNT_LENGTH));
+        captureReqFields.put(LOCAL_TIME, new NumericParseInfo(LOCAL_TIME_LENGTH));
+        captureReqFields.put(EXPIRATION, new NumericParseInfo(EXPIRATION_LENGTH));
+        captureReqFields.put(POINT_OF_SERVICE, new AlphaParseInfo(POINT_OF_SERVICE_LENGTH));
+        captureReqFields.put(FUNCTION_CODE, new NumericParseInfo(FUNCTION_CODE_LENGTH));
+        captureReqFields.put(CARD_ACCEPTOR_BUSINESS_CODE, new NumericParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
+        captureReqFields.put(ACQUIRER_REFERENCE, new LlvarParseInfo());
+        captureReqFields.put(APPROVAL_CODE, new AlphaParseInfo(APPROVAL_CODE_LENGTH));
+        captureReqFields.put(ACTION_CODE, new NumericParseInfo(ACTION_CODE_LENGTH));
+        captureReqFields.put(CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(CARD_ACCEPTOR_TERMINAL_ID_LENGTH));
+        captureReqFields.put(CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
+        captureReqFields.put(CARD_ACCEPTOR_NAME_LOCATION, new LlvarParseInfo());
+        captureReqFields.put(ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
+        captureReqFields.put(CURRENCY_CODE, new AlphaParseInfo(CURRENCY_CODE_LENGTH));
+        captureReqFields.put(AUTH_ODE, new LllvarParseInfo());
         
         messageFactory.setParseMap(MessageTypes.CAPTURE_REQUEST, captureReqFields);  
     }
 
+    /**
+     * Retrieves the bank used by the server.
+     * @return The bank.
+     */
     public Bank getBank() {
         return bank;
     }
 
+    /**
+     * Retrieves the message factory used by the server.
+     * @return The message factory.
+     */
+    public MessageFactory getMessageFactory() {
+        return messageFactory;
+    }
+
+    /**
+     * Starte this server.
+     * @param port The port the server must listen on.
+     * @throws UnknownHostException Thrown when an unknown exception occurs.
+     * @throws IOException Thrown on data transfer related errors.
+     */
     public abstract void start(int port) throws UnknownHostException, IOException;
+    
+    /**
+     * Stops the server.
+     */
     public abstract void stop();
         
     protected byte[] bytesFromInputStream(InputStream in) throws IOException {
