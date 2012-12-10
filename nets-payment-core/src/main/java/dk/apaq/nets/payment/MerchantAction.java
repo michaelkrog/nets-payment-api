@@ -5,9 +5,10 @@ package dk.apaq.nets.payment;
  * @author michael
  */
 public enum MerchantAction {
-    
+    //CHECKSTYLE:OFF
     Approved("A","Approved. Proceed with Capture."), 
     ContactCustomer("CC",""), Try_Again("TN",""), Recurring_Not_Allowed("RN",""), Data_Error("DE","");
+    //CHECKSTYLE:ON
     
     private String description;
     private String code;

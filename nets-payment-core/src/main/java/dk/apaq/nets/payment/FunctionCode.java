@@ -5,6 +5,7 @@ package dk.apaq.nets.payment;
  * @author michael
  */
 public enum FunctionCode {
+    //CHECKSTYLE:OFF
     //Auth
     Authorize_Original_Accurate_Amount("100"), Authorize_Original_Estimated_Amount("101"), Authorize_Supplementary_Accurate_Amount("106"), 
     
@@ -13,6 +14,7 @@ public enum FunctionCode {
     
     //Reverse
     Reverse_FullReversal("400");
+    //CHECKSTYLE:ON
   
     private String code;
 

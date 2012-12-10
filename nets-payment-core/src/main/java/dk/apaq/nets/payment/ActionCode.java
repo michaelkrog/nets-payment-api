@@ -4,7 +4,7 @@ package dk.apaq.nets.payment;
  * ActionCode for Nets Requests.
  */
 public enum ActionCode {
-
+    //CHECKSTYLE:OFF
     Approved("000", "Approved", "Approved", MerchantAction.Approved),
     Honour_WithId("001", "Honour with identification", "Decline", MerchantAction.ContactCustomer),
     Approved_Partial_Amount("002", "Approved for partitial amount", "Partly approved", MerchantAction.Try_Again),
@@ -32,7 +32,8 @@ public enum ActionCode {
     No_Card_Record("118", "No card record", "Decline", MerchantAction.ContactCustomer),
     Not_Permitted_Cardholder("119", "Transaction not permitted to cardholder", "Decline/Invalid transaction", MerchantAction.ContactCustomer),
     Not_Permitted_Terminal("120", "Transaction not permitted to terminal", "Decline/Invalid transaction", MerchantAction.Recurring_Not_Allowed),;
- 
+    //CHECKSTYLE:ON
+    
     private String code;
     private String merchantText;
     private String customerText;
