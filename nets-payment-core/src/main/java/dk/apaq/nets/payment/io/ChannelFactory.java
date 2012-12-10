@@ -17,7 +17,7 @@ public interface ChannelFactory {
 
     /**
      * Retrieves the message factory used by this channel factory.
-     * @return 
+     * @return the message factory.
      */
     MessageFactory getMessageFactory();
 }

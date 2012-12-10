@@ -11,9 +11,10 @@ import java.util.Date;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
-import static dk.apaq.nets.payment.MessageFields.*;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
+
+import static dk.apaq.nets.payment.MessageFields.*;
 
 /**
  * A Request for Reversing and Auhorization.

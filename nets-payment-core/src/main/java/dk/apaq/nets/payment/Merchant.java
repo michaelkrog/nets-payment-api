@@ -61,7 +61,7 @@ public class Merchant {
     }
     
     /**
-     * Sets the address
+     * Sets the address.
      * @param street The streetname incl. housenumber
      * @param postalCode The postal code
      * @param city The city name

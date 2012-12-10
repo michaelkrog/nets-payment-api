@@ -1,7 +1,8 @@
 package dk.apaq.nets.payment.io;
 
-import com.solab.iso8583.MessageFactory;
 import java.net.URL;
+
+import com.solab.iso8583.MessageFactory;
 import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.CoreConnectionPNames;
@@ -17,7 +18,7 @@ public class HttpChannelFactory extends AbstractChannelFactory {
     
     /**
      * Creates new instance.
-     * @param url 
+     * @param url The url to connect to
      */
     public HttpChannelFactory(URL url) {
         this(url, null, null);
@@ -25,8 +26,8 @@ public class HttpChannelFactory extends AbstractChannelFactory {
 
     /**
      * Create new instance.
-     * @param url
-     * @param channelLogger 
+     * @param url The url to connect to.
+     * @param channelLogger The logger.
      */
     public HttpChannelFactory(URL url, ChannelLogger channelLogger) {
         this(url, null, channelLogger);
@@ -34,8 +35,8 @@ public class HttpChannelFactory extends AbstractChannelFactory {
 
     /**
      * Creates new instance.
-     * @param url
-     * @param client 
+     * @param url The url to connect to.
+     * @param client The HttpClient to use.
      */
     public HttpChannelFactory(URL url, HttpClient client) {
         this(url, client, null);
@@ -59,14 +60,16 @@ public class HttpChannelFactory extends AbstractChannelFactory {
      * Creates a new Channel.
      * @return The channel created.
      */
+    @Override
     public Channel createChannel() {
         return new HttpChannel(getChannelLogger(), MESSAGE_FACTORY, client, url);
     }
 
     /**
      * Retrieves the message factory ued by this factory.
-     * @return 
+     * @return The message factory.
      */
+    @Override
     public MessageFactory getMessageFactory() {
         return MESSAGE_FACTORY;
     }

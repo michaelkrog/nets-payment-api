@@ -1,6 +1,10 @@
 package dk.apaq.nets.payment.io;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 import org.apache.commons.io.HexDump;
 import org.slf4j.Logger;
@@ -17,7 +21,7 @@ public class HexDumpChannelLogger implements ChannelLogger {
     /**
      * Constructs a new instance.
      *
-     * @param logDirectory
+     * @param logDirectory The directory to write the log files to.
      */
     public HexDumpChannelLogger(File logDirectory) {
         this.logDirectory = logDirectory;

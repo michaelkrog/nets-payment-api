@@ -50,7 +50,7 @@ public class Card {
     }
 
     /**
-     * Retrieves the card number
+     * Retrieves the card number.
      * @return The card number
      */
     public String getCardNumber() {

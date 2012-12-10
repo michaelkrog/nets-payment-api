@@ -24,7 +24,7 @@ public class SslSocketChannelFactory extends AbstractChannelFactory {
     private SocketFactory socketFactory = SSLSocketFactory.getDefault();
 
     /**
-     * Creates new instance
+     * Creates new instance.
      * @param host The host name to connect to.
      * @param port The port to connect to.
      */

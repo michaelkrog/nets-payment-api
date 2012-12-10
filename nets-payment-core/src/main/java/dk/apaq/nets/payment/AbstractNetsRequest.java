@@ -1,9 +1,7 @@
 package dk.apaq.nets.payment;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 
 import com.solab.iso8583.IsoMessage;
 import dk.apaq.nets.payment.io.Channel;
