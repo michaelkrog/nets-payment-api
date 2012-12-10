@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
+
+import dk.apaq.nets.test.Slf4jChannelLogger;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.junit.*;
@@ -35,7 +37,7 @@ public class NetsTest {
     //private AbstractMockNetsServer netsServer = new MockNetsHttpServer();
     private String serverUrl;
     private File logDir = new File("target/log");
-    private HexDumpChannelLogger channelLogger = new HexDumpChannelLogger(logDir);
+    private ChannelLogger channelLogger = new Slf4jChannelLogger();
     Nets nets = null;
     Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         
@@ -67,7 +69,7 @@ public class NetsTest {
         netsServer.start(4444);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
-        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, /*channelLogger*/null, 500), repository);
+        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), repository);
         nets.setMinWaitBetweenAttempts(500);
         //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
 
@@ -168,7 +170,6 @@ public class NetsTest {
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        
         //Need to authorize first
         nets.authorize(merchant, card, money, orderId);
         

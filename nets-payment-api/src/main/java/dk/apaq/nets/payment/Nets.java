@@ -103,7 +103,7 @@ public class Nets {
 
     /**
      * Retrieves the maximum number of times this instance will try a request if it fails.
-     * @return 
+     * @return The nuber of requests.
      */
     public int getMaxRequestAttempts() {
         return maxRequestAttempts;

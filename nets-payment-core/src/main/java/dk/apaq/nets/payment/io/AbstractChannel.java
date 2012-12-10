@@ -38,7 +38,7 @@ public abstract class AbstractChannel implements Channel {
     protected IsoMessage byteArrayToMessage(byte[] data) throws IOException {
 
         try {
-            Validate.isTrue(data.length > PGTMHeader.HEADER_LENGTH,
+            Validate.isTrue(data.length >= PGTMHeader.HEADER_LENGTH,
                     "The data array does not contain the minimum number of bytes required(" + PGTMHeader.HEADER_LENGTH + ").");
             byte[] headerData = Arrays.copyOfRange(data, 0, PGTMHeader.HEADER_LENGTH);
             byte[] messageData = Arrays.copyOfRange(data, PGTMHeader.HEADER_LENGTH, data.length);

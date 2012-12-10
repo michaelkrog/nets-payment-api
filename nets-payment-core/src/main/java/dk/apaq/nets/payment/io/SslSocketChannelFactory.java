@@ -65,7 +65,7 @@ public class SslSocketChannelFactory extends AbstractChannelFactory {
         SocketAddress address = new InetSocketAddress(host, port);
         socket.connect(address, channelTimeout);
         socket.setSoTimeout(channelTimeout);
-        return new SslSocketChannel(MESSAGE_FACTORY, socket);
+        return new SslSocketChannel(MESSAGE_FACTORY, socket, getChannelLogger());
     }
 
     /**

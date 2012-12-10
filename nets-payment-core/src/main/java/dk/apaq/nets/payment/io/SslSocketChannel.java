@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 public class SslSocketChannel extends AbstractChannel {
 
     private static final Logger LOG = LoggerFactory.getLogger(SslSocketChannel.class);
-    private Socket socket;
+    private final Socket socket;
+    private final ChannelLogger channelLogger;
 
     /**
      * Creates new instance.
@@ -28,7 +29,21 @@ public class SslSocketChannel extends AbstractChannel {
     public SslSocketChannel(MessageFactory messageFactory, Socket socket) {
         super(messageFactory);
         this.socket = socket;
+        this.channelLogger = null;
     }
+    
+    /**
+     * Creates new instance.
+     * @param messageFactory The message factory.
+     * @param socket The socket.
+     * @param channelLogger The channelLogger.
+     */
+    public SslSocketChannel(MessageFactory messageFactory, Socket socket, ChannelLogger channelLogger) {
+        super(messageFactory);
+        this.socket = socket;
+        this.channelLogger = channelLogger;
+    }
+    
     
     /**
      * @{@inheritDoc} 
@@ -37,8 +52,16 @@ public class SslSocketChannel extends AbstractChannel {
     public IsoMessage sendMessage(IsoMessage message) throws IOException {
         LOG.debug("Sending message");
         byte[] requestData = messageToByteArray(message);
+        
+        if (channelLogger != null) {
+            LOG.debug("Logging data to send.");
+            channelLogger.onMessageSent(requestData);
+        }
+
+        
         InputStream in = socket.getInputStream();
         OutputStream out = socket.getOutputStream();
+        
         
         out.write(requestData);
         out.flush();
@@ -47,7 +70,12 @@ public class SslSocketChannel extends AbstractChannel {
         IOUtils.copy(in, bout);
         
         byte[] responseData = bout.toByteArray();
-        
+
+        if (channelLogger != null) {
+            LOG.debug("Logging data recieved.");
+            channelLogger.onMessageRecieved(responseData);
+        }
+
         IsoMessage m = byteArrayToMessage(responseData);
         socket.close();
         return m;
