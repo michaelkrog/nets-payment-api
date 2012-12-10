@@ -1,14 +1,14 @@
 package dk.apaq.nets.test;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-import dk.apaq.nets.payment.PGTMHeader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import dk.apaq.nets.payment.PGTMHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -41,7 +41,7 @@ public class Bank {
         }
     }
 
-    public class Transaction {
+    public static class Transaction {
 
         private boolean authorized;
         private boolean captured;

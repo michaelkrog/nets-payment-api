@@ -1,16 +1,14 @@
 package dk.apaq.nets.test;
 
+import java.io.IOException;
+import java.text.NumberFormat;
+import java.text.ParseException;
+
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import dk.apaq.nets.payment.ActionCode;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  *
@@ -18,21 +16,26 @@ import java.util.Date;
  */
 public class ReversalMessageHandler implements MessageHandler {
 
-    private static final DateFormat df = new SimpleDateFormat("yyMMddHHmmss");
-    private static final NumberFormat nf = NumberFormat.getIntegerInstance();
-    
-    private String cardNo, processCode, approvalCode, functionCode, reasonCode,
-            cardAcceptorBusinessCode, acquirerReference, cardAcceptorTerminalId,
-            cardAcceptorIdCode, cardAcceptorLocation, currencyCode, ode;
+    //private static final String DATE_FORMAT = "yyMMddHHmmss";
+    private static final NumberFormat NUMBER_FORMAT = NumberFormat.getIntegerInstance();
+    private String ode;
+    private String acquirerReference;
+    /*private String cardNo, processCode, approvalCode, functionCode, reasonCode,
+     cardAcceptorBusinessCode, cardAcceptorTerminalId,
+     cardAcceptorIdCode, cardAcceptorLocation, currencyCode;*/
     private IsoMessage request;
     private IsoMessage response;
     private long amount;
-    private Date localTime;
+    //private Date localTime;
     private Bank bank;
 
-    public IsoMessage handleMessage(Bank bank, IsoMessage message) throws IOException {
+    /**
+     * @{@inheritDoc}
+     */
+    @Override
+    public IsoMessage handleMessage(Bank handler, IsoMessage message) throws IOException {
         try {
-            this.bank = bank;
+            this.bank = handler;
             this.request = message;
 
             parse();
@@ -44,21 +47,23 @@ public class ReversalMessageHandler implements MessageHandler {
     }
 
     private void doCancelAndResponse() {
-        ActionCode actionCode = null;
+        ActionCode actionCode;
         String newOde = null;
-        
+
         Bank.Transaction t = bank.getTransaction(ode);
-        if(t == null || !t.getOrderId().equals(acquirerReference)) {
+        if (t == null || !t.getOrderId().equals(acquirerReference)) {
             //if transaction not found or orderid does not match
             actionCode = ActionCode.No_Card_Record;
-        } else if(t.isAuthorized() && t.getAmount() >= amount) {
+        } else if (t.isAuthorized() && t.getAmount() >= amount) {
             newOde = bank.cancel(ode);
             actionCode = newOde == null ? ActionCode.No_Card_Record : ActionCode.Approved;
         } else {
             actionCode = ActionCode.Invalid_Amount;
         }
-        
-        if(newOde==null) newOde = "";
+
+        if (newOde == null) {
+            newOde = "";
+        }
         response = new IsoMessage();
         response.setIsoHeader("PSIP100000");
         response.setType(MessageTypes.REVERSAL_ADVICE_RESPONSE);
@@ -72,25 +77,25 @@ public class ReversalMessageHandler implements MessageHandler {
                 MessageFields.CURRENCY_CODE,
                 MessageFields.AUTHORIZATION_LIFE_CYCLE);
 
-        response.setValue(MessageFields.ACTION_CODE, actionCode.getCode(), IsoType.NUMERIC, 3);
-        response.setValue(MessageFields.AUTH_ODE, newOde, IsoType.LLLVAR, 255);
+        response.setValue(MessageFields.ACTION_CODE, actionCode.getCode(), IsoType.NUMERIC, MessageFields.ACTION_CODE_LENGTH);
+        response.setValue(MessageFields.AUTH_ODE, newOde, IsoType.LLLVAR, MessageFields.AUTH_ODE_LENGTH);
 
     }
 
     private void parse() throws ParseException {
-        cardNo = request.getField(MessageFields.PRIMARY_ACCOUNT_NUMBER).toString();
-        processCode = request.getField(MessageFields.PROCESSING_CODE).toString();
-        amount = nf.parse(request.getField(MessageFields.AMOUNT).toString()).intValue();
-        localTime = df.parse(request.getField(MessageFields.LOCAL_TIME).toString());
-        functionCode = request.getField(MessageFields.FUNCTION_CODE).toString();
-        reasonCode = request.getField(MessageFields.MESSAGE_REASON_CODE).toString();
-        cardAcceptorBusinessCode = request.getField(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE).toString();
+        //cardNo = request.getField(MessageFields.PRIMARY_ACCOUNT_NUMBER).toString();
+        //processCode = request.getField(MessageFields.PROCESSING_CODE).toString();
+        amount = NUMBER_FORMAT.parse(request.getField(MessageFields.AMOUNT).toString()).intValue();
+        //localTime = DATE_FORMAT.parse(request.getField(MessageFields.LOCAL_TIME).toString());
+        //functionCode = request.getField(MessageFields.FUNCTION_CODE).toString();
+        //reasonCode = request.getField(MessageFields.MESSAGE_REASON_CODE).toString();
+        //cardAcceptorBusinessCode = request.getField(MessageFields.CARD_ACCEPTOR_BUSINESS_CODE).toString();
         acquirerReference = request.getField(MessageFields.ACQUIRER_REFERENCE).toString();
-        approvalCode = request.getField(MessageFields.APPROVAL_CODE).toString();
-        cardAcceptorTerminalId = request.getField(MessageFields.CARD_ACCEPTOR_TERMINAL_ID).toString();
-        cardAcceptorIdCode = request.getField(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE).toString();
-        cardAcceptorLocation = request.getField(MessageFields.CARD_ACCEPTOR_NAME_LOCATION).toString();
-        currencyCode = request.getField(MessageFields.CURRENCY_CODE).toString();
+        //approvalCode = request.getField(MessageFields.APPROVAL_CODE).toString();
+        //cardAcceptorTerminalId = request.getField(MessageFields.CARD_ACCEPTOR_TERMINAL_ID).toString();
+        //cardAcceptorIdCode = request.getField(MessageFields.CARD_ACCEPTOR_IDENTIFICATION_CODE).toString();
+        //cardAcceptorLocation = request.getField(MessageFields.CARD_ACCEPTOR_NAME_LOCATION).toString();
+        //currencyCode = request.getField(MessageFields.CURRENCY_CODE).toString();
         ode = request.getField(MessageFields.AUTH_ODE).toString();
     }
 }
