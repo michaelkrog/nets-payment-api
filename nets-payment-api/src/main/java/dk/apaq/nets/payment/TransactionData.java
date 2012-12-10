@@ -7,8 +7,9 @@ import org.joda.money.Money;
  * @author krog
  */
 public class TransactionData {
-    
+    //CHECKSTYLE:OFF
     private String _id;
+    //CHECKSTYLE:ON
     private String ode;
     private String approvalCode;
     private String processingCode;
