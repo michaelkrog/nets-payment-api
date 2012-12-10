@@ -30,6 +30,7 @@ abstract class AbstractNetsRequest<T> {
     private static final Logger LOG = LoggerFactory.getLogger(AbstractNetsRequest.class);
 
     static {
+        //CHECKSTYLE:OFF
         EXPIRE_FORMAT.setMaximumIntegerDigits(2);
         EXPIRE_FORMAT.setMinimumIntegerDigits(2);
         CVD_FORMAT.setMaximumIntegerDigits(3);
@@ -37,6 +38,7 @@ abstract class AbstractNetsRequest<T> {
         BUSINESS_CODE_FORMAT.setMaximumIntegerDigits(4);
         BUSINESS_CODE_FORMAT.setMinimumIntegerDigits(4);
         BUSINESS_CODE_FORMAT.setGroupingUsed(false);
+        //CHECKSTYLE:ON
     }
 
     private final Merchant merchant;
