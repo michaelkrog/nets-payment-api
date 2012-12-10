@@ -3,7 +3,7 @@ package dk.apaq.nets.payment;
 import java.util.Arrays;
 
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.binary.Hex; 
 
 /**
  *
@@ -11,6 +11,9 @@ import org.apache.commons.codec.binary.Hex;
  */
 public class PGTMHeader {
 
+    /**
+     * The length of a PGTM Header.
+     */
     public static final int HEADER_LENGTH = 32;
     private static final String DEFAULT_IDENTITY = "0000524800022000000000000032000000000000000000000000";
     private static final int BITS_IN_BYTE = 8;

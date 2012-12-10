@@ -48,7 +48,7 @@ public enum ActionCode {
 
     /**
      * Retrieves the String code.
-     * @return Strig code.
+     * @return String code.
      */
     public String getCode() {
         return code;
@@ -64,7 +64,7 @@ public enum ActionCode {
 
     /**
      * A text suitable for Merchants.
-     * @return 
+     * @return The text
      */
     public String getMerchantText() {
         return merchantText;

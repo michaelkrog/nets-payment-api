@@ -14,8 +14,8 @@ public class NetsResponse {
     
     /**
      * Create a new instance.
-     * @param actionCode
-     * @param ode 
+     * @param actionCode The action code
+     * @param ode The ode
      */
     public NetsResponse(ActionCode actionCode, String ode) {
         this.actionCode = actionCode;
@@ -26,10 +26,10 @@ public class NetsResponse {
 
     /**
      * Create a new instance.
-     * @param actionCode
-     * @param ode
-     * @param processingCode
-     * @param approvalCode 
+     * @param actionCode The action code
+     * @param ode The ode
+     * @param processingCode The processing code
+     * @param approvalCode The approval code
      */
     public NetsResponse(ActionCode actionCode, String ode, String processingCode, String approvalCode) {
         this.actionCode = actionCode;
@@ -56,7 +56,7 @@ public class NetsResponse {
 
     /**
      * Retrieve the approval code.
-     * @return 
+     * @return The approvale code or null if no approvalcode available.
      */
     public String getApprovalCode() {
         return approvalCode;
@@ -64,7 +64,7 @@ public class NetsResponse {
 
     /**
      * Retrieves the processing code.
-     * @return 
+     * @return The processing code or null if no processing code available.
      */
     public String getProcessingCode() {
         return processingCode;
