@@ -26,7 +26,7 @@ public class Nets {
 
     private static final Logger LOG = LoggerFactory.getLogger(Nets.class);
     private final ChannelFactory channelFactory;
-    private final Repository<TransactionData, String> repository;
+    private final INetsRepository repository;
     private int maxRequestAttempts = AbstractNetsRequest.DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
     private int minWaitBetweenAttempts = AbstractNetsRequest.DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
 
@@ -86,7 +86,7 @@ public class Nets {
      * @param channelFactory The channelFactory to use.
      * @param persistence The Repository to use for storing data needed the this instance.
      */
-    public Nets(ChannelFactory channelFactory, Repository<TransactionData, String> persistence) {
+    public Nets(ChannelFactory channelFactory, INetsRepository persistence) {
         this.channelFactory = channelFactory;
         this.repository = persistence;
         init();
@@ -132,8 +132,8 @@ public class Nets {
      * @param money The amount.
      * @param orderId The reference order id.
      */
-    public void authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
-        authorize(merchant, card, money, orderId, false, false, false, false);
+    public ITransactionData authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
+        return authorize(merchant, card, money, orderId, false, false, false, false);
     }
 
     /**
@@ -158,7 +158,7 @@ public class Nets {
      * @throws IOException Thrown if communication with Nets fails.
      * @throws NetsException Thrown if the reverse was not approved.
      */
-    public void authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean estimatedAmount, 
+    public ITransactionData authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean estimatedAmount, 
             boolean fraudSuspect, boolean gambling) throws IOException, NetsException {
         AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId, channelFactory);
         request.setEstimatedAmount(estimatedAmount);
@@ -169,7 +169,7 @@ public class Nets {
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
-            TransactionData data = new TransactionData();
+            ITransactionData data = repository.createNew();
             data.setId(buildTransactionDataId(merchant, orderId));
             data.setActionCode(response.getActionCode());
             data.setApprovedAmount(money);
@@ -177,7 +177,7 @@ public class Nets {
             data.setApprovalCode(response.getApprovalCode());
             data.setProcessingCode(response.getProcessingCode());
             data.setCard(card);
-            repository.save(data);
+            return repository.save(data);
         } else {
             throw new NetsException("Authorize not approved.", response.getActionCode());
         }
@@ -225,7 +225,7 @@ public class Nets {
      * @throws NetsException Thrown if the reverse was not approved.
      */
     public void reverse(Merchant merchant, String orderId) throws IOException, NetsException {
-        TransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
+        ITransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
         ReverseRequest request = new ReverseRequest(merchant, data.getCard(), data.getApprovedAmount(), orderId, data.getOde(),
                 data.getProcessingCode(), data.getApprovalCode(), channelFactory);
         setRequestRetryProperties(request);
@@ -241,7 +241,7 @@ public class Nets {
     }
 
     private void doCaptureRequest(Merchant merchant, Money money, String orderId, boolean refund) throws IOException, NetsException {
-        TransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
+        ITransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
         CaptureRequest request = new CaptureRequest(merchant, data.getCard(), money, orderId, data.getOde(), data.getApprovalCode(), 
                 data.getActionCode(), channelFactory);
         setRequestRetryProperties(request);

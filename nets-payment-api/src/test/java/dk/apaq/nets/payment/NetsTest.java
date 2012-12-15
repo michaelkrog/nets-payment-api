@@ -41,12 +41,30 @@ public class NetsTest {
     Nets nets = null;
     Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
         
-    private Repository<TransactionData, String> repository = new CollectionRepository<TransactionData>(new CollectionRepository.IdResolver<TransactionData>() {
+    private INetsRepository repository = new MockRepository();
+    
+    private class MockRepository extends CollectionRepository<ITransactionData> implements INetsRepository {
 
-        public String getIdForBean(TransactionData bean) {
-            return bean.getId();
+        public MockRepository() {
+             super(new CollectionRepository.IdResolver<ITransactionData>() {
+
+                @Override
+                public String getIdForBean(ITransactionData bean) {
+                    return bean.getId();
+                }
+                 
+             });
         }
-    });
+
+        
+
+        @Override
+        public ITransactionData createNew() {
+            return new TransactionData();
+        }
+        
+        
+    };
     
     @Before
     public void setUp() throws Exception {
@@ -91,7 +109,7 @@ public class NetsTest {
         String orderId = "orderid";
         nets.authorize(merchant, card, money, orderId);
         
-        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
+        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         assertEquals(255, data.getOde().length());
@@ -155,7 +173,7 @@ public class NetsTest {
         //Now cancel
         nets.reverse(merchant, orderId);
         
-        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
+        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         
@@ -176,7 +194,7 @@ public class NetsTest {
         //Now capture
         nets.capture(merchant, money, orderId);
         
-        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
+        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
                 
@@ -201,7 +219,7 @@ public class NetsTest {
         //Now refund
         nets.credit(merchant, money, orderId);
         
-        TransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
+        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
         assertEquals(ActionCode.Approved , data.getActionCode());
         assertNotNull(data.getOde());
         
