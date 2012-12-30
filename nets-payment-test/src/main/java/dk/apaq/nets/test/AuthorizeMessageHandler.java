@@ -6,8 +6,8 @@ import java.text.ParseException;
 
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.ActionCode;
-import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.FunctionCode;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;

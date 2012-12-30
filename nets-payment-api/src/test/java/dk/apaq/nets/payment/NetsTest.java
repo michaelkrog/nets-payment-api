@@ -13,6 +13,7 @@ import java.net.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.test.Slf4jChannelLogger;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;

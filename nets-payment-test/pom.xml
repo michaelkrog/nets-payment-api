@@ -42,5 +42,10 @@
       <version>1.6.6</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>dk.apaq.framework</groupId>
+      <artifactId>common-beans</artifactId>
+      <version>1.0.6-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

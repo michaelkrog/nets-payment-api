@@ -1,7 +1,7 @@
 package dk.apaq.nets.payment;
 
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.ActionCode;
-import dk.apaq.nets.payment.Card;
 import dk.apaq.nets.payment.ITransactionData;
 import org.joda.money.Money;
 

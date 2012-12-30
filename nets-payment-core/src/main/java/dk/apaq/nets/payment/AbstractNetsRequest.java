@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.NumberFormat;
 
 import com.solab.iso8583.IsoMessage;
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.apache.commons.lang.Validate;

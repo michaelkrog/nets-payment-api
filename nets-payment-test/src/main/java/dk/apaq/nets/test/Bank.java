@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import dk.apaq.nets.payment.Card;
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.MessageFields;
 
 /**

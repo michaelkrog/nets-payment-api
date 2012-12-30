@@ -57,5 +57,10 @@
       <artifactId>joda-money</artifactId>
       <version>0.6</version>
     </dependency>
+    <dependency>
+      <groupId>dk.apaq.framework</groupId>
+      <artifactId>common-beans</artifactId>
+      <version>1.0.6-SNAPSHOT</version>
+    </dependency>
   </dependencies>
 </project>

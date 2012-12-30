@@ -3,6 +3,7 @@
  */
 package dk.apaq.nets.payment;
 
+import dk.apaq.framework.common.beans.finance.Card;
 import org.joda.money.Money;
 
 /**

@@ -10,6 +10,7 @@ import com.solab.iso8583.parse.FieldParseInfo;
 import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.framework.repository.Repository;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;

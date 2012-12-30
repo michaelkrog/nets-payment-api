@@ -11,6 +11,7 @@ import java.util.Date;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
+import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 

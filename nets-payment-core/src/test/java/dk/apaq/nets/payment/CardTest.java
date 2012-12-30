@@ -1,5 +1,6 @@
 package dk.apaq.nets.payment;
 
+import dk.apaq.framework.common.beans.finance.Card;
 import org.junit.*;
 import static org.junit.Assert.*;
 
