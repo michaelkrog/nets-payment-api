@@ -7,7 +7,7 @@ import dk.apaq.framework.common.beans.finance.Card;
 import org.joda.money.Money;
 
 /**
- * Javadoc
+ * Interface for a transactio data object used to store data for a Nets transaction.
  */
 public interface ITransactionData {
 
