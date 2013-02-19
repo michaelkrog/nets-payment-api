@@ -9,6 +9,7 @@ import com.solab.iso8583.IsoType;
 import dk.apaq.nets.payment.ActionCode;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  *
@@ -28,7 +29,13 @@ public class ReversalMessageHandler implements MessageHandler {
     private long amount;
     //private Date localTime;
     private Bank bank;
+    private final StringEncryptor encryptor;
 
+    public ReversalMessageHandler(StringEncryptor encryptor) {
+        this.encryptor = encryptor;
+    }
+
+    
     /**
      * @{@inheritDoc}
      */

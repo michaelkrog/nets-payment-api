@@ -5,6 +5,9 @@ import java.net.Socket;
 import java.util.Arrays;
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocketFactory;
+
+import org.jasypt.encryption.StringEncryptor;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -25,7 +28,9 @@ public class MockNetsSocketServerTest {
     @Test
     public void testStart() throws Exception {
         System.out.println("start");
-        MockNetsSocketServer server = new MockNetsSocketServer();
+        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+        encryptor.setPassword("qwerty");
+        MockNetsSocketServer server = new MockNetsSocketServer(encryptor);
         server.start(12345);
         try {
             SocketFactory sf = SSLSocketFactory.getDefault();

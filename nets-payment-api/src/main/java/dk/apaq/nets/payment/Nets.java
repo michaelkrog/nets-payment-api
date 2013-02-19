@@ -11,13 +11,13 @@ import com.solab.iso8583.parse.LllvarParseInfo;
 import com.solab.iso8583.parse.LlvarParseInfo;
 import com.solab.iso8583.parse.NumericParseInfo;
 import dk.apaq.framework.common.beans.finance.Card;
-import dk.apaq.framework.repository.Repository;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static dk.apaq.nets.payment.MessageFields.*;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  * The main class of the Nets Payment API. <br>
@@ -27,7 +27,7 @@ public class Nets {
 
     private static final Logger LOG = LoggerFactory.getLogger(Nets.class);
     private final ChannelFactory channelFactory;
-    private final INetsRepository repository;
+    private final StringEncryptor encryptor;
     private int maxRequestAttempts = AbstractNetsRequest.DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
     private int minWaitBetweenAttempts = AbstractNetsRequest.DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
 
@@ -87,9 +87,9 @@ public class Nets {
      * @param channelFactory The channelFactory to use.
      * @param persistence The Repository to use for storing data needed the this instance.
      */
-    public Nets(ChannelFactory channelFactory, INetsRepository persistence) {
+    public Nets(ChannelFactory channelFactory, StringEncryptor encryptor) {
         this.channelFactory = channelFactory;
-        this.repository = persistence;
+        this.encryptor = encryptor;
         init();
     }
 
@@ -133,7 +133,7 @@ public class Nets {
      * @param money The amount.
      * @param orderId The reference order id.
      */
-    public ITransactionData authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
+    public NetsResponse authorize(Merchant merchant, Card card, Money money, String orderId) throws IOException, NetsException {
         return authorize(merchant, card, money, orderId, false, false, false, false);
     }
 
@@ -159,9 +159,9 @@ public class Nets {
      * @throws IOException Thrown if communication with Nets fails.
      * @throws NetsException Thrown if the reverse was not approved.
      */
-    public ITransactionData authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean estimatedAmount, 
+    public NetsResponse authorize(Merchant merchant, Card card, Money money, String orderId, boolean recurring, boolean estimatedAmount, 
             boolean fraudSuspect, boolean gambling) throws IOException, NetsException {
-        AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId, channelFactory);
+        AuthorizeRequest request = new AuthorizeRequest(merchant, card, money, orderId, channelFactory, encryptor);
         request.setEstimatedAmount(estimatedAmount);
         request.setFraudSuspect(fraudSuspect);
         request.setGambling(gambling);
@@ -170,15 +170,7 @@ public class Nets {
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
-            ITransactionData data = repository.createNew();
-            data.setId(buildTransactionDataId(merchant, orderId));
-            data.setActionCode(response.getActionCode());
-            data.setApprovedAmount(money);
-            data.setOde(response.getOde());
-            data.setApprovalCode(response.getApprovalCode());
-            data.setProcessingCode(response.getProcessingCode());
-            data.setCard(card);
-            return repository.save(data);
+            return response;
         } else {
             throw new NetsException("Authorize not approved.", response.getActionCode());
         }
@@ -195,8 +187,9 @@ public class Nets {
      * @throws IOException Thrown if communication with Nets fails.
      * @throws NetsException Thrown if the reverse was not approved.
      */
-    public void capture(Merchant merchant, Money money, String orderId) throws IOException, NetsException {
-        doCaptureRequest(merchant, money, orderId, false);
+    public NetsResponse capture(Merchant merchant, Money money, String orderId, Card card, ActionCode actionCode, String ode, String processingCode, 
+            String approvalCode) throws IOException, NetsException {
+        return doCaptureRequest(merchant, money, orderId, false, card, actionCode, ode, processingCode, approvalCode);
     }
 
     /**
@@ -210,8 +203,9 @@ public class Nets {
      * @throws IOException Thrown if communication with Nets fails.
      * @throws NetsException Thrown if the reverse was not approved.
      */
-    public void credit(Merchant merchant, Money money, String orderId) throws IOException, NetsException {
-        doCaptureRequest(merchant, money, orderId, true);
+    public NetsResponse credit(Merchant merchant, Money money, String orderId, Card card, ActionCode actionCode, String ode, String processingCode, 
+            String approvalCode) throws IOException, NetsException {
+        return doCaptureRequest(merchant, money, orderId, true, card, actionCode, ode, processingCode, approvalCode);
     }
 
     /**
@@ -225,41 +219,32 @@ public class Nets {
      * @throws IOException Thrown if communication with Nets fails.
      * @throws NetsException Thrown if the reverse was not approved.
      */
-    public void reverse(Merchant merchant, String orderId) throws IOException, NetsException {
-        ITransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
-        ReverseRequest request = new ReverseRequest(merchant, data.getCard(), data.getApprovedAmount(), orderId, data.getOde(),
-                data.getProcessingCode(), data.getApprovalCode(), channelFactory);
+    public NetsResponse reverse(Merchant merchant, Money money, String orderId, Card card, ActionCode actionCode, String ode, 
+            String processingCode, String approvalCode) throws IOException, NetsException {
+        ReverseRequest request = new ReverseRequest(merchant, card, money, orderId, ode, processingCode, approvalCode, channelFactory, 
+                encryptor);
         setRequestRetryProperties(request);
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
-            data.setActionCode(response.getActionCode());
-            data.setOde(response.getOde());
-            repository.save(data);
+            return response;
         } else {
             throw new NetsException("Reverse not approved.", response.getActionCode());
         }
     }
 
-    private void doCaptureRequest(Merchant merchant, Money money, String orderId, boolean refund) throws IOException, NetsException {
-        ITransactionData data = repository.findOne(buildTransactionDataId(merchant, orderId));
-        CaptureRequest request = new CaptureRequest(merchant, data.getCard(), money, orderId, data.getOde(), data.getApprovalCode(), 
-                data.getActionCode(), channelFactory);
+    private NetsResponse doCaptureRequest(Merchant merchant, Money money, String orderId, boolean refund, Card card, ActionCode actionCode, 
+            String ode, String processingCode, String approvalCode) throws IOException, NetsException {
+        CaptureRequest request = new CaptureRequest(merchant, card, money, orderId, ode, approvalCode, actionCode, channelFactory, encryptor);
         setRequestRetryProperties(request);
         request.setRefund(refund);
         NetsResponse response = request.send();
 
         if (response.getActionCode().getMerchantAction() == MerchantAction.Approved) {
-            data.setActionCode(response.getActionCode());
-            data.setOde(response.getOde());
-            repository.save(data);
+            return response;
         } else {
             throw new NetsException("Capture not approved.", response.getActionCode());
         }
-    }
-
-    private String buildTransactionDataId(Merchant merchant, String orderId) {
-        return merchant.getMerchantId() + "_" + orderId;
     }
 
     private void setRequestRetryProperties(AbstractNetsRequest req) {

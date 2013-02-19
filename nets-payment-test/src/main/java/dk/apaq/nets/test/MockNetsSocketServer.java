@@ -11,6 +11,8 @@ import java.util.logging.Level;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
+
+import org.jasypt.encryption.StringEncryptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +27,8 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
     private ServerSocket serverSocket = null;
     private boolean running;
 
-    public MockNetsSocketServer() {
+    public MockNetsSocketServer(StringEncryptor encryptor) {
+        super(encryptor);
         String path = "src/test/resources/keystore";
         File file = new File(path);
         String password = "123456";

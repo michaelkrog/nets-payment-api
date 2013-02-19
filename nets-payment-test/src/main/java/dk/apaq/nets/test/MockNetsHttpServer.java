@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import dk.apaq.nets.payment.PGTMHeader;
+import org.jasypt.encryption.StringEncryptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,10 @@ public class MockNetsHttpServer extends AbstractMockNetsServer implements HttpHa
     
     private static final Logger LOG = LoggerFactory.getLogger(MockNetsHttpServer.class);
     private HttpServer httpServer = null;
+
+    public MockNetsHttpServer(StringEncryptor encryptor) {
+        super(encryptor);
+    }
     
     /**
      * @{@inheritDoc} 

@@ -11,6 +11,7 @@ import dk.apaq.nets.payment.ActionCode;
 import dk.apaq.nets.payment.FunctionCode;
 import dk.apaq.nets.payment.MessageFields;
 import dk.apaq.nets.payment.MessageTypes;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  *
@@ -31,7 +32,12 @@ public class AuthorizeMessageHandler implements MessageHandler {
     private int amount;
     //private Date localTime;
     private Bank bank;
+    private final StringEncryptor encryptor;
 
+    public AuthorizeMessageHandler(StringEncryptor encryptor) {
+        this.encryptor = encryptor;
+    }
+    
     /**
      * @{@inheritDoc} 
      */
@@ -100,7 +106,7 @@ public class AuthorizeMessageHandler implements MessageHandler {
         //cardAcceptorLocation = request.getField(MessageFields.CARD_ACCEPTOR_NAME_LOCATION).toString();
         //currencyCode = request.getField(MessageFields.CURRENCY_CODE).toString();
 
-        card = new Card(cardNo, NUMBER_FORMAT.parse(expire.substring(0, 2)).intValue(), NUMBER_FORMAT.parse(expire.substring(2, 4)).intValue(), "123");
+        card = new Card(cardNo, NUMBER_FORMAT.parse(expire.substring(0, 2)).intValue(), NUMBER_FORMAT.parse(expire.substring(2, 4)).intValue(), "123" ,encryptor);
 
     }
 }

@@ -16,6 +16,7 @@ import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 
 import static dk.apaq.nets.payment.MessageFields.*;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  * A Request for Reversing and Auhorization.
@@ -38,8 +39,8 @@ public final class ReverseRequest extends AbstractNetsRequest<ReverseRequest> {
      * @param channelFactory  The channel factory.
      */
     public ReverseRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String processingCode, String approvalCode, 
-            ChannelFactory channelFactory) {
-        super(merchant, card, money, orderId, ode, channelFactory);
+            ChannelFactory channelFactory, StringEncryptor encryptor) {
+        super(merchant, card, money, orderId, ode, channelFactory, encryptor);
         this.approvalCode = approvalCode;
         this.processingCode = processingCode;
     }
@@ -94,7 +95,7 @@ public final class ReverseRequest extends AbstractNetsRequest<ReverseRequest> {
             reason = MessageReason.SuspectedMalfunction.getCode();
         }
         String address = buildAddressField();
-        message.setField(PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, getCard().getCardNumber()));
+        message.setField(PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, getCard().getCardNumber(getEncryptor())));
         message.setField(PROCESSING_CODE, new IsoValue<String>(IsoType.NUMERIC, processingCode, PROCESSING_CODE_LENGTH));
         message.setField(AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, getMoney().getAmountMinorInt(), AMOUNT_LENGTH));
         message.setField(LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), LOCAL_TIME_LENGTH));

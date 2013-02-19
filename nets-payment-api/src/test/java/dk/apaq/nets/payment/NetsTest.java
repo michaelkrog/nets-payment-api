@@ -1,8 +1,6 @@
 package dk.apaq.nets.payment;
 
 import com.solab.iso8583.parse.*;
-import dk.apaq.framework.repository.CollectionRepository;
-import dk.apaq.framework.repository.Repository;
 import dk.apaq.nets.payment.io.*;
 import dk.apaq.nets.test.AbstractMockNetsServer;
 import dk.apaq.nets.test.Bank;
@@ -15,6 +13,8 @@ import java.util.Map;
 
 import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.test.Slf4jChannelLogger;
+import org.jasypt.encryption.StringEncryptor;
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
 import org.joda.money.CurrencyUnit;
 import org.joda.money.Money;
 import org.junit.*;
@@ -34,41 +34,18 @@ public class NetsTest {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/keystore");
     }
     
-    private AbstractMockNetsServer netsServer = new MockNetsSocketServer();
+    private StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+    private AbstractMockNetsServer netsServer = new MockNetsSocketServer(encryptor);
     //private AbstractMockNetsServer netsServer = new MockNetsHttpServer();
     private String serverUrl;
     private File logDir = new File("target/log");
     private ChannelLogger channelLogger = new Slf4jChannelLogger();
     Nets nets = null;
     Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
-        
-    private INetsRepository repository = new MockRepository();
-    
-    private class MockRepository extends CollectionRepository<ITransactionData> implements INetsRepository {
-
-        public MockRepository() {
-             super(new CollectionRepository.IdResolver<ITransactionData>() {
-
-                @Override
-                public String getIdForBean(ITransactionData bean) {
-                    return bean.getId();
-                }
-                 
-             });
-        }
-
-        
-
-        @Override
-        public ITransactionData createNew() {
-            return new TransactionData();
-        }
-        
-        
-    };
     
     @Before
     public void setUp() throws Exception {
+        encryptor.setPassword("qwerty");
         logDir.mkdirs();
         
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
@@ -83,12 +60,12 @@ public class NetsTest {
         authReqFields.put(26, new NumericParseInfo(4));
                 
         InetAddress address = Inet4Address.getLocalHost();
-        netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_1, 12, 12, "123"), 100000);
-        netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_2, 12, 12, "123"), 1000000000000000000L);
+        netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor), 100000);
+        netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_2, 12, 12, "123", encryptor), 1000000000000000000L);
         netsServer.start(4444);
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
-        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), repository);
+        nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), encryptor);
         nets.setMinWaitBetweenAttempts(500);
         //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
 
@@ -105,18 +82,17 @@ public class NetsTest {
     public void testAuthorize() throws Exception {
         System.out.println("authorize");
         
-        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        nets.authorize(merchant, card, money, orderId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId);
         
-        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
-        assertEquals(ActionCode.Approved , data.getActionCode());
-        assertNotNull(data.getOde());
-        assertEquals(255, data.getOde().length());
-        assertTrue(data.getOde().startsWith("oDe123"));
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());
+        assertEquals(255, response.getOde().length());
+        assertTrue(response.getOde().startsWith("oDe123"));
         
-        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        Bank.Transaction t = netsServer.getBank().getTransaction(response.getOde());
         assertNotNull(t);
         assertTrue(t.isAuthorized());
         assertEquals(money.getAmountMinorInt(), t.getAmount());
@@ -128,7 +104,7 @@ public class NetsTest {
         
         nets.setMaxRequestAttempts(1);
         
-        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
         netsServer.setNextRequestFails(true);
@@ -146,7 +122,7 @@ public class NetsTest {
     public void testAuthorizeInsuffecientFunds() throws Exception {
         System.out.println("authorizeInsuffecientFunds");
         
-        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 131231.2);
         String orderId = "orderid";
         
@@ -162,23 +138,22 @@ public class NetsTest {
     @Test
     public void testCancel() throws Exception {
         System.out.println("cancel");
-        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
         String terminalId = "test";
         String approvalCode = "app";
         
         //Need to authorize first
-        nets.authorize(merchant, card, money, orderId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId);
         
         //Now cancel
-        nets.reverse(merchant, orderId);
+        response = nets.reverse(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
         
-        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
-        assertEquals(ActionCode.Approved , data.getActionCode());
-        assertNotNull(data.getOde());
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());
         
-        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        Bank.Transaction t = netsServer.getBank().getTransaction(response.getOde());
         assertNotNull(t);
         assertTrue(t.isCancelled());
     }
@@ -186,20 +161,19 @@ public class NetsTest {
     @Test
     public void testCapture() throws Exception {
         System.out.println("capture");
-        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
         //Need to authorize first
-        nets.authorize(merchant, card, money, orderId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId);
         
         //Now capture
-        nets.capture(merchant, money, orderId);
+        response = nets.capture(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
         
-        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
-        assertEquals(ActionCode.Approved , data.getActionCode());
-        assertNotNull(data.getOde());
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());
                 
-        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        Bank.Transaction t = netsServer.getBank().getTransaction(response.getOde());
         assertNotNull(t);
         assertTrue(t.isCaptured());
     }
@@ -207,24 +181,23 @@ public class NetsTest {
     @Test
     public void testRefund() throws Exception {
         System.out.println("refund");
-        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
         
         //Need to authorize first
-        nets.authorize(merchant, card, money, orderId);
+        NetsResponse response = nets.authorize(merchant, card, money, orderId);
         
         //Now capture
-        nets.capture(merchant, money, orderId);
+        response = nets.capture(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
         
         //Now refund
-        nets.credit(merchant, money, orderId);
+        response = nets.credit(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
         
-        ITransactionData data = repository.findOne(merchant.getMerchantId()+"_"+orderId);
-        assertEquals(ActionCode.Approved , data.getActionCode());
-        assertNotNull(data.getOde());
+        assertEquals(ActionCode.Approved , response.getActionCode());
+        assertNotNull(response.getOde());
         
-        Bank.Transaction t = netsServer.getBank().getTransaction(data.getOde());
+        Bank.Transaction t = netsServer.getBank().getTransaction(response.getOde());
         assertNotNull(t);
         assertTrue(t.isRefunded());
     }
@@ -232,7 +205,7 @@ public class NetsTest {
     @Test
     public void testPerformance() throws Exception {
         System.out.println("performance");
-        Card card = new Card(CARDNO_VALID_VISA_2, 12, 12, "123");
+        Card card = new Card(CARDNO_VALID_VISA_2, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
 
@@ -243,10 +216,10 @@ public class NetsTest {
         for(int i=0;i<100;i++) {
             String currentId = orderId + "_" + i;
             //Need to authorize first
-            nets.authorize(merchant, card, money, currentId);
+            NetsResponse response = nets.authorize(merchant, card, money, currentId);
 
             //Now capture
-            nets.capture(merchant, money, currentId);
+            response = nets.capture(merchant, money, currentId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
         }
         long end = System.currentTimeMillis();
         long time = end-start;

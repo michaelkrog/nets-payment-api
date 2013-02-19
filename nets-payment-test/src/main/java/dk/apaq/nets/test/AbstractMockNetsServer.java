@@ -23,6 +23,7 @@ import dk.apaq.nets.payment.PsipHeader;
 import org.apache.commons.io.IOUtils;
 
 import static dk.apaq.nets.payment.MessageFields.*;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  *
@@ -33,8 +34,10 @@ public abstract class AbstractMockNetsServer {
     private Bank bank = new Bank();
     private MessageFactory messageFactory = new MessageFactory();
     private boolean nextRequestFails = false;
+    private final StringEncryptor encryptor;
 
-    public AbstractMockNetsServer() {
+    public AbstractMockNetsServer(StringEncryptor encryptor) {
+        this.encryptor = encryptor;
         Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
         authReqFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
         authReqFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
@@ -184,13 +187,13 @@ public abstract class AbstractMockNetsServer {
         IsoMessage response;
         switch (type) {
             case MessageTypes.AUTHORIZATION_REQUEST:
-                messageHandler = new AuthorizeMessageHandler();
+                messageHandler = new AuthorizeMessageHandler(encryptor);
                 break;
             case MessageTypes.CAPTURE_REQUEST:
-                messageHandler = new CaptureMessageHandler();
+                messageHandler = new CaptureMessageHandler(encryptor);
                 break;
             case MessageTypes.REVERSAL_ADVICE_REQUEST:
-                messageHandler = new ReversalMessageHandler();
+                messageHandler = new ReversalMessageHandler(encryptor);
                 break;
             default:
                 throw new IOException("Message type not recognized.");

@@ -7,6 +7,7 @@ import java.text.ParseException;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import dk.apaq.nets.payment.*;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  *
@@ -29,7 +30,13 @@ public class CaptureMessageHandler implements MessageHandler {
     private int amount;
     //private Date localTime;
     private Bank bank;
+    private final StringEncryptor encryptor;
 
+    public CaptureMessageHandler(StringEncryptor encryptor) {
+        this.encryptor = encryptor;
+    }
+
+    
     /**
      * @{@inheritDoc}
      */

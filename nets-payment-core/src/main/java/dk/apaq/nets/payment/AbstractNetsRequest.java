@@ -8,6 +8,7 @@ import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.io.Channel;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.apache.commons.lang.Validate;
+import org.jasypt.encryption.StringEncryptor;
 import org.joda.money.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,8 @@ abstract class AbstractNetsRequest<T> {
     public static final NumberFormat BUSINESS_CODE_FORMAT = NumberFormat.getIntegerInstance();
     private static final int ADDRESS_WITHOUT_COUNTRY_LENGTH = 96;
     private static final Logger LOG = LoggerFactory.getLogger(AbstractNetsRequest.class);
+    
+    private final StringEncryptor encryptor;
 
     static {
         //CHECKSTYLE:OFF
@@ -50,11 +53,13 @@ abstract class AbstractNetsRequest<T> {
     private int maxRequestAttempts = DEFAULT_MAX_ATTEMPTS_PER_REQUEST;
     private int minWaitBetweenAttempts = DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
     
-    public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, ChannelFactory channelFactory) {
-        this(merchant, card, money, orderId, null, channelFactory);
+    public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, ChannelFactory channelFactory,
+            StringEncryptor encryptor) {
+        this(merchant, card, money, orderId, null, channelFactory, encryptor);
     }
     
-    public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, String ode, ChannelFactory channelFactory) {
+    public AbstractNetsRequest(Merchant merchant, Card card, Money money, String orderId, String ode, ChannelFactory channelFactory,
+            StringEncryptor encryptor) {
         Validate.notNull(merchant, "merchant must be specified");
         Validate.notNull(card, "card must be specified");
         Validate.notNull(money, "money must be specified");
@@ -65,6 +70,11 @@ abstract class AbstractNetsRequest<T> {
         this.orderId = orderId;
         this.ode = ode;
         this.channelFactory = channelFactory;
+        this.encryptor = encryptor;
+    }
+
+    public StringEncryptor getEncryptor() {
+        return encryptor;
     }
     
     public ChannelFactory getChannelFactory() {

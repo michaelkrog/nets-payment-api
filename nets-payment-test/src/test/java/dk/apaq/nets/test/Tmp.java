@@ -12,6 +12,8 @@ import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+
 /**
  *
  * @author krog
@@ -20,7 +22,9 @@ public class Tmp {
 
     public static void main(String[] args) throws UnknownHostException, IOException, InterruptedException {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/keystore");
-        MockNetsSocketServer server = new MockNetsSocketServer();
+        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+        encryptor.setPassword("qwerty");
+        MockNetsSocketServer server = new MockNetsSocketServer(encryptor);
         server.start(12345);
         try {
             SocketFactory sf = SSLSocketFactory.getDefault();

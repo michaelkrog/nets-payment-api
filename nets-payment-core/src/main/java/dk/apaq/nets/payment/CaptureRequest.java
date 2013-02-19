@@ -16,6 +16,7 @@ import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 
 import static dk.apaq.nets.payment.MessageFields.*;
+import org.jasypt.encryption.StringEncryptor;
 
 /**
  * Request class for Capture requests.
@@ -40,8 +41,8 @@ public final class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
      * @param channelFactory The channelfactory.
      */
     public CaptureRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode, ActionCode actionCode, 
-            ChannelFactory channelFactory) {
-        super(merchant, card, money, orderId, ode, channelFactory);
+            ChannelFactory channelFactory, StringEncryptor encryptor) {
+        super(merchant, card, money, orderId, ode, channelFactory, encryptor);
         this.actionCode = actionCode;
         this.approvalCode = approvalCode;
     }
@@ -152,7 +153,7 @@ public final class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
             function = amountDiffers ? FunctionCode.Capture_Amount_Differs.getCode() : FunctionCode.Capture_Amount_Accurate.getCode();
         }
         String address = buildAddressField();
-        message.setField(PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, getCard().getCardNumber()));
+        message.setField(PRIMARY_ACCOUNT_NUMBER, new IsoValue<String>(IsoType.LLVAR, getCard().getCardNumber(getEncryptor())));
         message.setField(PROCESSING_CODE, new IsoValue<String>(IsoType.NUMERIC, processingCode, PROCESSING_CODE_LENGTH));
         message.setField(AMOUNT, new IsoValue<Integer>(IsoType.NUMERIC, getMoney().getAmountMinorInt(), AMOUNT_LENGTH));
         message.setField(LOCAL_TIME, new IsoValue<String>(IsoType.NUMERIC, df.format(new Date()), LOCAL_TIME_LENGTH));
@@ -171,7 +172,7 @@ public final class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
         message.setField(CARD_ACCEPTOR_IDENTIFICATION_CODE,
                 new IsoValue<String>(IsoType.ALPHA, getMerchant().getMerchantId(), CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
         message.setField(CARD_ACCEPTOR_NAME_LOCATION, new IsoValue<String>(IsoType.LLVAR, address.toString(), CARD_ACCEPTOR_NAME_LOCATION_LENGTH));
-        message.setField(ADDITIONAL_DATA_NATIONAL, new IsoValue<String>(IsoType.LLLVAR, "V503" + getCard().getCvd()));
+        message.setField(ADDITIONAL_DATA_NATIONAL, new IsoValue<String>(IsoType.LLLVAR, "V503" + getCard().getCvd(getEncryptor())));
         message.setField(CURRENCY_CODE, new IsoValue<String>(IsoType.ALPHA, getMoney().getCurrencyUnit().getCurrencyCode(), CURRENCY_CODE_LENGTH));
         message.setField(AUTH_ODE, new IsoValue<String>(IsoType.LLLVAR, getOde(), AUTH_ODE_LENGTH));
         return message;
