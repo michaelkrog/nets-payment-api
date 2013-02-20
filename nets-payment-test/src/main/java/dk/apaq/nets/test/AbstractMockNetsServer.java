@@ -109,7 +109,7 @@ public abstract class AbstractMockNetsServer {
 
         IsoMessage message = messageFactory.parseMessage(messageData, PsipHeader.VALID_HEADER_LENGTH);
         if (message == null) {
-            throw new NullPointerException("Message not recognized");
+            throw new IllegalArgumentException("Message not recognized");
         }
 
         PsipHeader psipHeader = PsipHeader.fromString(message.getIsoHeader());

@@ -1,22 +1,12 @@
 package dk.apaq.nets.payment;
 
 import java.io.IOException;
-import java.text.NumberFormat;
-import java.util.HashMap;
-import java.util.Map;
-
-import com.solab.iso8583.parse.AlphaParseInfo;
-import com.solab.iso8583.parse.FieldParseInfo;
-import com.solab.iso8583.parse.LllvarParseInfo;
-import com.solab.iso8583.parse.LlvarParseInfo;
-import com.solab.iso8583.parse.NumericParseInfo;
 import dk.apaq.framework.common.beans.finance.Card;
 import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static dk.apaq.nets.payment.MessageFields.*;
 import org.jasypt.encryption.StringEncryptor;
 
 /**

@@ -24,8 +24,8 @@ public class Tmp {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/keystore");
         StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
         encryptor.setPassword("qwerty");
-        MockNetsSocketServer server = new MockNetsSocketServer(encryptor);
-        server.start(12345);
+        MockNetsSocketServer server = new MockNetsSocketServer(encryptor,12345);
+        server.start();
         try {
             SocketFactory sf = SSLSocketFactory.getDefault();
             Socket socket = sf.createSocket(InetAddress.getLocalHost(), 12345);

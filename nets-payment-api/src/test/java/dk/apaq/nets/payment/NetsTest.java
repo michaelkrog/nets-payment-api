@@ -35,7 +35,7 @@ public class NetsTest {
     }
     
     private StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
-    private AbstractMockNetsServer netsServer = new MockNetsSocketServer(encryptor);
+    private AbstractMockNetsServer netsServer = new MockNetsSocketServer(encryptor, 4444);
     //private AbstractMockNetsServer netsServer = new MockNetsHttpServer();
     private String serverUrl;
     private File logDir = new File("target/log");
@@ -62,7 +62,7 @@ public class NetsTest {
         InetAddress address = Inet4Address.getLocalHost();
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor), 100000);
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_2, 12, 12, "123", encryptor), 1000000000000000000L);
-        netsServer.start(4444);
+        netsServer.start();
         
         serverUrl = "http://" + address.getHostName() + ":12345/service";
         nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), encryptor);
@@ -187,12 +187,13 @@ public class NetsTest {
         nets.setMinWaitBetweenAttempts(10000);
         //Need to authorize first
         NetsResponse response = nets.authorize(merchant, card, money, orderId);
+        String approvalCode = response.getApprovalCode();
         
         //Now capture
-        response = nets.capture(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
+        response = nets.capture(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), approvalCode);
         
         //Now refund
-        response = nets.credit(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), response.getApprovalCode());
+        response = nets.credit(merchant, money, orderId, card, response.getActionCode(), response.getOde(), response.getProcessingCode(), approvalCode);
         
         assertEquals(ActionCode.Approved , response.getActionCode());
         assertNotNull(response.getOde());

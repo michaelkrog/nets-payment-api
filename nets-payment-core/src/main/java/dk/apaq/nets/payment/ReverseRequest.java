@@ -16,6 +16,7 @@ import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 
 import static dk.apaq.nets.payment.MessageFields.*;
+import org.apache.commons.lang.Validate;
 import org.jasypt.encryption.StringEncryptor;
 
 /**
@@ -41,6 +42,9 @@ public final class ReverseRequest extends AbstractNetsRequest<ReverseRequest> {
     public ReverseRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String processingCode, String approvalCode, 
             ChannelFactory channelFactory, StringEncryptor encryptor) {
         super(merchant, card, money, orderId, ode, channelFactory, encryptor);
+        Validate.notNull(approvalCode, "approvalCode is null.");
+        Validate.notNull(processingCode, "processingCode is null.");
+        Validate.notNull(ode, "ode is null.");
         this.approvalCode = approvalCode;
         this.processingCode = processingCode;
     }

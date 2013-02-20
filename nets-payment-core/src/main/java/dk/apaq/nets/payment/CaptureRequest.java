@@ -16,6 +16,7 @@ import dk.apaq.nets.payment.io.ChannelFactory;
 import org.joda.money.Money;
 
 import static dk.apaq.nets.payment.MessageFields.*;
+import org.apache.commons.lang.Validate;
 import org.jasypt.encryption.StringEncryptor;
 
 /**
@@ -43,6 +44,9 @@ public final class CaptureRequest extends AbstractNetsRequest<CaptureRequest> {
     public CaptureRequest(Merchant merchant, Card card, Money money, String orderId, String ode, String approvalCode, ActionCode actionCode, 
             ChannelFactory channelFactory, StringEncryptor encryptor) {
         super(merchant, card, money, orderId, ode, channelFactory, encryptor);
+        Validate.notNull(approvalCode, "approvalCode is null.");
+        Validate.notNull(actionCode, "actionCode is null.");
+        Validate.notNull(ode, "ode is null.");
         this.actionCode = actionCode;
         this.approvalCode = approvalCode;
     }
