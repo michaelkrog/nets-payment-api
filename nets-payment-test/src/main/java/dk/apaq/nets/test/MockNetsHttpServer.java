@@ -21,9 +21,11 @@ public class MockNetsHttpServer extends AbstractMockNetsServer implements HttpHa
     
     private static final Logger LOG = LoggerFactory.getLogger(MockNetsHttpServer.class);
     private HttpServer httpServer = null;
+    private final int port;
 
-    public MockNetsHttpServer(StringEncryptor encryptor) {
+    public MockNetsHttpServer(StringEncryptor encryptor, int port) {
         super(encryptor);
+        this.port = port;
     }
     
     /**
@@ -54,7 +56,7 @@ public class MockNetsHttpServer extends AbstractMockNetsServer implements HttpHa
      * @{@inheritDoc} 
      */
     @Override
-    public void start(int port) throws UnknownHostException, IOException {
+    public void start() throws UnknownHostException, IOException {
         InetSocketAddress adr = new InetSocketAddress(Inet4Address.getLocalHost(), port);
         httpServer = HttpServer.create(adr, 0);
         httpServer.createContext("/", this);

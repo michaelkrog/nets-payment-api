@@ -26,9 +26,11 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
     private ServerSocketFactory serverSocketFactory;
     private ServerSocket serverSocket = null;
     private boolean running;
-
-    public MockNetsSocketServer(StringEncryptor encryptor) {
+    private final int port;
+    
+    public MockNetsSocketServer(StringEncryptor encryptor, int port) {
         super(encryptor);
+        this.port = port;
         String path = "src/test/resources/keystore";
         File file = new File(path);
         String password = "123456";
@@ -45,7 +47,7 @@ public class MockNetsSocketServer extends AbstractMockNetsServer {
     }
 
     @Override
-    public void start(int port) throws UnknownHostException, IOException {
+    public void start() throws UnknownHostException, IOException {
         InetAddress address = Inet4Address.getLocalHost();
         serverSocket = serverSocketFactory.createServerSocket(port, 0, address);
         LOG.info("ServerSocket created [address={},port={}].", address, port);

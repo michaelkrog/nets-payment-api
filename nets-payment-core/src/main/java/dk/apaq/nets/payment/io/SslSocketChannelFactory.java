@@ -15,12 +15,12 @@ import com.solab.iso8583.MessageFactory;
  */
 public class SslSocketChannelFactory extends AbstractChannelFactory {
     
-    private static final MessageFactory MESSAGE_FACTORY = new MessageFactory();
     private static final int DEFAULT_TIMEOUT = 30000;
     
     private String host;
     private int port;
     private int channelTimeout;
+    private MessageFactory messageFactory = new MessageFactory();
     private SocketFactory socketFactory = SSLSocketFactory.getDefault();
 
     /**
@@ -65,7 +65,7 @@ public class SslSocketChannelFactory extends AbstractChannelFactory {
         SocketAddress address = new InetSocketAddress(host, port);
         socket.connect(address, channelTimeout);
         socket.setSoTimeout(channelTimeout);
-        return new SslSocketChannel(MESSAGE_FACTORY, socket, getChannelLogger());
+        return new SslSocketChannel(messageFactory, socket, getChannelLogger());
     }
 
     /**
@@ -73,9 +73,15 @@ public class SslSocketChannelFactory extends AbstractChannelFactory {
      */
     @Override
     public MessageFactory getMessageFactory() {
-        return MESSAGE_FACTORY;
+        return messageFactory;
     }
 
+    
+    @Override
+    public void setMessageFactory(MessageFactory messageFactory) {
+        this.messageFactory = messageFactory;
+    }
+    
     /**
      * Sets the timeout in milliseconds.
      * @param channelTimeout 

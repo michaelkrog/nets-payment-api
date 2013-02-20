@@ -20,4 +20,9 @@ public interface ChannelFactory {
      * @return the message factory.
      */
     MessageFactory getMessageFactory();
+    
+    /**
+     * Sets the MessageFactory to be used by this ChannelFactory.
+     */
+    void setMessageFactory(MessageFactory messageFactory);
 }

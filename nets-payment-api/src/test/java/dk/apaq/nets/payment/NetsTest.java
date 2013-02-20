@@ -184,7 +184,7 @@ public class NetsTest {
         Card card = new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor);
         Money money = Money.of(CurrencyUnit.USD, 12.2);
         String orderId = "orderid";
-        
+        nets.setMinWaitBetweenAttempts(10000);
         //Need to authorize first
         NetsResponse response = nets.authorize(merchant, card, money, orderId);
         

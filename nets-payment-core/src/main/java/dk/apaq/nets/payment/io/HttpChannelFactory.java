@@ -12,7 +12,7 @@ import org.apache.http.params.CoreConnectionPNames;
  */
 public class HttpChannelFactory extends AbstractChannelFactory {
 
-    private static final MessageFactory MESSAGE_FACTORY = new MessageFactory();
+    private MessageFactory messageFactory = new MessageFactory();
     private URL url;
     private HttpClient client;
     
@@ -62,7 +62,7 @@ public class HttpChannelFactory extends AbstractChannelFactory {
      */
     @Override
     public Channel createChannel() {
-        return new HttpChannel(getChannelLogger(), MESSAGE_FACTORY, client, url);
+        return new HttpChannel(getChannelLogger(), messageFactory, client, url);
     }
 
     /**
@@ -71,7 +71,12 @@ public class HttpChannelFactory extends AbstractChannelFactory {
      */
     @Override
     public MessageFactory getMessageFactory() {
-        return MESSAGE_FACTORY;
+        return messageFactory;
+    }
+
+    @Override
+    public void setMessageFactory(MessageFactory messageFactory) {
+        this.messageFactory = messageFactory;
     }
     
 }

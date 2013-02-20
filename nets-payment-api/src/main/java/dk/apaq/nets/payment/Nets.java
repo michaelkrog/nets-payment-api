@@ -32,52 +32,7 @@ public class Nets {
     private int minWaitBetweenAttempts = AbstractNetsRequest.DEFAULT_MIN_WAIT_BETWEEN_ATTEMPTS;
 
     private void init() {
-        LOG.info("Initializing Nets instance.");
-
-        Map<Integer, FieldParseInfo> authRespFields = new HashMap<Integer, FieldParseInfo>();
-        authRespFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        authRespFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
-        authRespFields.put(AMOUNT, new NumericParseInfo(AMOUNT_LENGTH));
-        authRespFields.put(LOCAL_TIME, new NumericParseInfo(LOCAL_TIME_LENGTH));
-        authRespFields.put(ACQUIRER_REFERENCE, new LlvarParseInfo());
-        authRespFields.put(APPROVAL_CODE, new AlphaParseInfo(APPROVAL_CODE_LENGTH));
-        authRespFields.put(ACTION_CODE, new NumericParseInfo(ACTION_CODE_LENGTH));
-        authRespFields.put(CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(CARD_ACCEPTOR_TERMINAL_ID_LENGTH));
-        authRespFields.put(CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
-        authRespFields.put(ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
-        authRespFields.put(ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
-        authRespFields.put(CURRENCY_CODE, new AlphaParseInfo(CURRENCY_CODE_LENGTH));
-        authRespFields.put(AUTH_ODE, new LllvarParseInfo());
-        channelFactory.getMessageFactory().setParseMap(MessageTypes.AUTHORIZATION_RESPONSE, authRespFields);
-
-        Map<Integer, FieldParseInfo> reverseRespFields = new HashMap<Integer, FieldParseInfo>();
-        reverseRespFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        reverseRespFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
-        reverseRespFields.put(AMOUNT, new NumericParseInfo(AMOUNT_LENGTH));
-        reverseRespFields.put(LOCAL_TIME, new NumericParseInfo(LOCAL_TIME_LENGTH));
-        reverseRespFields.put(ACQUIRER_REFERENCE, new LlvarParseInfo());
-        reverseRespFields.put(ACTION_CODE, new NumericParseInfo(ACTION_CODE_LENGTH));
-        reverseRespFields.put(CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(CARD_ACCEPTOR_TERMINAL_ID_LENGTH));
-        reverseRespFields.put(CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
-        reverseRespFields.put(CURRENCY_CODE, new AlphaParseInfo(CURRENCY_CODE_LENGTH));
-        reverseRespFields.put(AUTH_ODE, new LllvarParseInfo());
-        channelFactory.getMessageFactory().setParseMap(MessageTypes.REVERSAL_ADVICE_RESPONSE, reverseRespFields);
-
-        Map<Integer, FieldParseInfo> captureRespFields = new HashMap<Integer, FieldParseInfo>();
-        captureRespFields.put(PRIMARY_ACCOUNT_NUMBER, new LlvarParseInfo());
-        captureRespFields.put(PROCESSING_CODE, new NumericParseInfo(PROCESSING_CODE_LENGTH));
-        captureRespFields.put(AMOUNT, new NumericParseInfo(AMOUNT_LENGTH));
-        captureRespFields.put(LOCAL_TIME, new NumericParseInfo(LOCAL_TIME_LENGTH));
-        captureRespFields.put(ACQUIRER_REFERENCE, new LlvarParseInfo());
-        captureRespFields.put(ACTION_CODE, new NumericParseInfo(ACTION_CODE_LENGTH));
-        captureRespFields.put(CARD_ACCEPTOR_TERMINAL_ID, new AlphaParseInfo(CARD_ACCEPTOR_TERMINAL_ID_LENGTH));
-        captureRespFields.put(CARD_ACCEPTOR_IDENTIFICATION_CODE, new AlphaParseInfo(CARD_ACCEPTOR_IDENTIFICATION_CODE_LENGTH));
-        captureRespFields.put(ADDITIONAL_RESPONSE_DATA, new LlvarParseInfo());
-        captureRespFields.put(ADDITIONAL_DATA_NATIONAL, new LllvarParseInfo());
-        captureRespFields.put(CURRENCY_CODE, new AlphaParseInfo(CURRENCY_CODE_LENGTH));
-        captureRespFields.put(AUTH_ODE, new LllvarParseInfo());
-        channelFactory.getMessageFactory().setParseMap(MessageTypes.CAPTURE_RESPONSE, captureRespFields);
-
+        channelFactory.setMessageFactory(NetsMessageFactoryCreator.createFactory());
         LOG.info("Nets instance initialized.");
 
     }
