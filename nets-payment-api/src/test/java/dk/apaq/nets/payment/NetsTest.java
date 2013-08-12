@@ -26,9 +26,9 @@ import static org.junit.Assert.*;
  */
 public class NetsTest {
     
-    private static final String CARDNO_VALID_VISA_1 = "45711234123412341234";
-    private static final String CARDNO_VALID_VISA_2 = "45711234123412341235";
-    private static final String CARDNO_INVALID = "00001234123412341234";
+    private static final String CARDNO_VALID_VISA_1 = "4571123412341234";
+    private static final String CARDNO_VALID_VISA_2 = "4571123412341235";
+    private static final String CARDNO_INVALID = "0000123412341234";
     
     static {
         System.setProperty("javax.net.ssl.trustStore", "src/test/resources/keystore");
@@ -36,29 +36,17 @@ public class NetsTest {
     
     private StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
     private AbstractMockNetsServer netsServer = new MockNetsSocketServer(encryptor, 4444);
-    //private AbstractMockNetsServer netsServer = new MockNetsHttpServer();
     private String serverUrl;
     private File logDir = new File("target/log");
     private ChannelLogger channelLogger = new Slf4jChannelLogger();
-    Nets nets = null;
-    Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
+    private Nets nets = null;
+    private Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
     
     @Before
     public void setUp() throws Exception {
         encryptor.setPassword("qwerty");
         logDir.mkdirs();
         
-        Map<Integer, FieldParseInfo> authReqFields = new HashMap<Integer, FieldParseInfo>();
-        authReqFields.put(2, new LlvarParseInfo());
-        authReqFields.put(3, new NumericParseInfo(6));
-        authReqFields.put(4, new NumericParseInfo(12));
-        authReqFields.put(12, new NumericParseInfo(12));
-        authReqFields.put(14, new NumericParseInfo(4));
-        authReqFields.put(22, new AlphaParseInfo(12));
-        authReqFields.put(24, new NumericParseInfo(3));
-        authReqFields.put(25, new NumericParseInfo(4));
-        authReqFields.put(26, new NumericParseInfo(4));
-                
         InetAddress address = Inet4Address.getLocalHost();
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_1, 12, 12, "123", encryptor), 100000);
         netsServer.getBank().addCard(new Card(CARDNO_VALID_VISA_2, 12, 12, "123", encryptor), 1000000000000000000L);
@@ -67,8 +55,6 @@ public class NetsTest {
         serverUrl = "http://" + address.getHostName() + ":12345/service";
         nets = new Nets(new SslSocketChannelFactory(Inet4Address.getLocalHost().getHostAddress(), 4444, channelLogger, 500), encryptor);
         nets.setMinWaitBetweenAttempts(500);
-        //nets = new Nets(new HttpChannelFactory(new URL(serverUrl), channelLogger), crud);
-
     }
     
     @After
