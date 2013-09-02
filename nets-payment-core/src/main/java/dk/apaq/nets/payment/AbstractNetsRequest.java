@@ -14,7 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Abstract class for Requests.
+ * Abstract class for Nets Requests.
  *
  * @param <T> Type of Request.
  */

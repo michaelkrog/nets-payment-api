@@ -15,15 +15,19 @@ import com.solab.iso8583.parse.NumericParseInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static dk.apaq.nets.payment.MessageFields.*;
+
 /**
- * Javadoc
+ * Factory creator for NetsMessageFactory
  */
-public class NetsMessageFactoryCreator {
+public final class NetsMessageFactoryCreator {
     
     private static final Logger LOG = LoggerFactory.getLogger(NetsMessageFactoryCreator.class);
     
     private NetsMessageFactoryCreator() { /* EMPTY */ }
     
+    /**
+     * Creates a new MessageFactory.
+     */
     public static MessageFactory createFactory() {
         LOG.debug("Creating new Nets MessageFactory");
         MessageFactory factory = new MessageFactory();

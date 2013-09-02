@@ -17,7 +17,7 @@ public class Merchant {
     }
 
     /**
-     * Creates a new MERchant.
+     * Creates a new Merchant.
      * @param merchantId The id of the merchant.
      * @param name The name of the merchant.
      * @param address The address of the merchant. 

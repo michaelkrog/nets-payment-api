@@ -6,8 +6,7 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex; 
 
 /**
- *
- * @author krog
+ * A PGTM Header as defined by Nets.
  */
 public class PGTMHeader {
 
@@ -26,7 +25,7 @@ public class PGTMHeader {
     /**
      * Creates a new instance.
      *
-     * @param length The length of the payload exluding the this header.
+     * @param length The length of the payload excluding the this header.
      * @param networkResponseCode The response code
      */
     public PGTMHeader(int length, String networkResponseCode) {

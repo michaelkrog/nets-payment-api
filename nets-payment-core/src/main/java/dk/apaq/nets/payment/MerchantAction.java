@@ -7,7 +7,8 @@ package dk.apaq.nets.payment;
 public enum MerchantAction {
     //CHECKSTYLE:OFF
     Approved("A","Approved. Proceed with Capture."), 
-    ContactCustomer("CC",""), Try_Again("TN",""), Recurring_Not_Allowed("RN",""), Data_Error("DE","");
+    ContactCustomer("CC","Contact Customer"), Try_Again("TN","Try Again"), Recurring_Not_Allowed("RN","Recurring Payment not allowed"), 
+    Data_Error("DE","Data Error");
     //CHECKSTYLE:ON
     
     private String description;
@@ -19,7 +20,7 @@ public enum MerchantAction {
     }
 
     /**
-     * Retreieves a description for the MerchantAction.
+     * Retrieves a description for the MerchantAction.
      * @return The description.
      */
     public String getDescription() {

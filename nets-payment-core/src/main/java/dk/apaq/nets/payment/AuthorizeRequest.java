@@ -15,9 +15,7 @@ import static dk.apaq.nets.payment.MessageFields.*;
 import org.jasypt.encryption.StringEncryptor;
 
 /**
- *
- * Request used for authorization.
- *
+ * Request used for authorization of payment.
  */
 public final class AuthorizeRequest extends AbstractNetsRequest<AuthorizeRequest> {
 

@@ -24,7 +24,7 @@ import org.junit.Test;
  */
 public class MockNetsDirectServerTest {
 
-    private static final String CARDNO_VALID_VISA_1 = "45711234123412341234";
+    private static final String CARDNO_VALID_VISA_1 = "4571123412341234";
     private StringEncryptor encryptor = new StandardPBEStringEncryptor();
     private Merchant merchant = new Merchant("123", "Smith Radio", new Address("Boulevard 4", "3266", "Broby", "DNK"));
     private MockNetsDirectServer directServer = new MockNetsDirectServer(encryptor);

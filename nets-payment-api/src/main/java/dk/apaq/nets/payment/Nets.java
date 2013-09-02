@@ -24,11 +24,10 @@ public class Nets {
     private void init() {
         channelFactory.setMessageFactory(NetsMessageFactoryCreator.createFactory());
         LOG.info("Nets instance initialized.");
-
     }
 
     /**
-     * Consctructs a new Nets instance.
+     * Constructs a new Nets instance.
      * @param channelFactory The channelFactory to use.
      * @param persistence The Repository to use for storing data needed the this instance.
      */
@@ -49,7 +48,7 @@ public class Nets {
 
     /**
      * Retrieves the maximum number of times this instance will try a request if it fails.
-     * @return The nuber of requests.
+     * @return The number of requests.
      */
     public int getMaxRequestAttempts() {
         return maxRequestAttempts;
@@ -64,7 +63,7 @@ public class Nets {
     }
 
     /**
-     * Sets the time this instance should wait between each retry when erros occurs.
+     * Sets the time this instance should wait between each retry when errors occurs.
      * @param minWaitBetweenAttempts The time in milliseconds.
      */
     public void setMinWaitBetweenAttempts(int minWaitBetweenAttempts) {
@@ -84,18 +83,18 @@ public class Nets {
 
     /**
      * Authorizes an amount. <br>
-     * Authorisations can be requested for the ‘Accurate amount’ or an ‘Estimated amount’. Following the first ‘Original
+     * Authorizations can be requested for the ‘Accurate amount’ or an ‘Estimated amount’. Following the first ‘Original
      * Authorization’, a ‘Supplementary Authorization’ (function code '106') can be sent. This is an option depending on acquirer
      * participation.<br><br> 
      * An example of use of a ‘Supplementary Authorization’:<br> 
      * If a merchant having received an order and checked for validity of card and CDV, is not able to deliver the goods or services 
      * within the period of time for which funds are guaranteed (typically within seven days), he sends an ‘Original Authorization’ to 
-     * the amount of zero(0). Shortly, before this dispatch, the authorisation is send for the full amount, securing the card is still 
+     * the amount of zero(0). Shortly, before this dispatch, the authorization is send for the full amount, securing the card is still 
      * active and the amount disposable.
      *
      * @param merchant The merchant used when authorizing.
      * @param card The creditcard information.
-     * @param money The amount to capture which can be be less or equals to the amount authorised(except for special merchante categories).
+     * @param money The amount to capture which can be be less or equals to the amount authorized(except for special merchant categories).
      * @param orderId The orderId for which money were authorized.
      * @param recurring Whether this is an authorization for recurring payment.
      * @param estimatedAmount Wether the amount is just estimated.
@@ -122,12 +121,12 @@ public class Nets {
     }
 
     /**
-     * Captures an authorization. As a standard, the amount captured cannot exceed the amount authorised, except for specific merchant categories e.g.
+     * Captures an authorization. As a standard, the amount captured cannot exceed the amount authorized, except for specific merchant categories e.g.
      * where gratuity is common. Additionally, the merchant and acquirer may have made special arrangements, which the payment module must be able to
      * support.
      *
      * @param merchant The merchant used when authorizing.
-     * @param money The amount to capture which can be be less or equals to the amount authorised(except for special merchante categories).
+     * @param money The amount to capture which can be be less or equals to the amount authorized(except for special merchante categories).
      * @param orderId The orderId for which money were authorized.
      * @throws IOException Thrown if communication with Nets fails.
      * @throws NetsException Thrown if the reverse was not approved.
@@ -154,9 +153,9 @@ public class Nets {
     }
 
     /**
-     * Reverses an authorization. If a merchant following a successful authorisation is unable to dispatch the order on time, an ‘Authorization
-     * Reversal’ should be sent. The amount reversed must be equivalent to the amount authorised. When involving debit cards in particular, it is
-     * critical for the cardholder’s disposal of his account that the authorisation is reversed. If the authorisation is not reversed it can affect
+     * Reverses an authorization. If a merchant following a successful authorization is unable to dispatch the order on time, an ‘Authorization
+     * Reversal’ should be sent. The amount reversed must be equivalent to the amount authorized. When involving debit cards in particular, it is
+     * critical for the cardholder’s disposal of his account that the authorization is reversed. If the authorization is not reversed it can affect
      * the cardholder’s possibilities of placing a replacement order.
      *
      * @param merchant The merchant used when authorizing.
